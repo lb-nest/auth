@@ -8,7 +8,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { Roles } from 'src/common/roles/roles.decorator';
+import { RolesGuard } from 'src/common/roles/roles.guard';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -30,19 +33,22 @@ export class ProjectController {
     return this.projectService.findOne(req.user.project.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleType.Owner)
   @Post('me/invites')
   invite(@Req() req: any, @Body() inviteUserDto: InviteUserDto) {
     return this.projectService.inviteUser(req.user.project.id, inviteUserDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleType.Owner)
   @Patch('me')
   update(@Req() req: any, @Body() updateProjectDto: UpdateProjectDto) {
     return this.projectService.update(req.user.project.id, updateProjectDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleType.Owner)
   @Delete('me')
   delete(@Req() req: any) {
     return this.projectService.delete(req.user.project.id);
