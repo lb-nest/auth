@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  password  String
+  name      String
+  avatarUrl String?
+  confirmed Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  roles     UserRole[]
+}
+
+enum BillingType {
+  Free
+  Paid
+}
+
+model Project {
+  id        Int         @id @default(autoincrement())
+  name      String
+  slug      String
+  billing   BillingType @default(Free)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  roles     UserRole[]
+  Invite    Invite[]
+}
+
+model Invite {
+  id        Int     @id @default(autoincrement())
+  email     String
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, email])
+}
+
+enum RoleType {
+  User
+  Admin
+  Owner
+}
+
+model UserRole {
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  projectId Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role      RoleType @default(User)
+
+  @@unique([projectId, userId])
+}
