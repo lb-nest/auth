@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -15,7 +15,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('projects/:id/token')
+  @Post('projects/:id/token')
   async token(@Param('id') id: string, @Req() req: Request) {
     return this.authService.token(Number(id), req.user);
   }

@@ -17,9 +17,20 @@ model User {
   name      String
   avatarUrl String?
   confirmed Boolean    @default(false)
+  token     Token[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   roles     UserRole[]
+}
+
+model Token {
+  id        Int     @id @default(autoincrement())
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    Int     @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
 }
 
 enum BillingType {
@@ -27,13 +38,21 @@ enum BillingType {
   Paid
 }
 
-model Project {
+model Billing {
   id        Int         @id @default(autoincrement())
+  projectId Int         @unique
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      BillingType
+}
+
+model Project {
+  id        Int        @id @default(autoincrement())
   name      String
   slug      String
-  billing   BillingType @default(Free)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  token     Token[]
+  billing   Billing?
   roles     UserRole[]
   Invite    Invite[]
 }

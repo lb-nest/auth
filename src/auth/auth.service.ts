@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  NotImplementedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
@@ -12,39 +16,57 @@ export class AuthService {
 
   async login(user: any) {
     return {
-      token: await this.jwtService.signAsync(user),
+      token: await this.jwtService.signAsync(user, {
+        expiresIn: '1h',
+      }),
     };
   }
 
-  async token(id: number, user: any) {
-    const project = await this.prismaService.project.findFirst({
+  async token(projectId: number, user: any) {
+    const token = await this.prismaService.token.upsert({
       where: {
-        id,
-        roles: {
-          some: {
-            userId: user.id,
-          },
+        projectId_userId: {
+          projectId,
+          userId: user.id,
         },
       },
+      create: {
+        projectId,
+        userId: user.id,
+      },
+      update: {},
       select: {
         id: true,
-        roles: {
+        project: {
           select: {
-            role: true,
+            id: true,
+            roles: {
+              select: {
+                role: true,
+              },
+            },
+            billing: {
+              select: {
+                id: true,
+                type: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!project) {
-      throw new NotFoundException();
-    }
-
     return {
-      token: await this.jwtService.signAsync({
-        ...user,
-        project,
-      }),
+      token: await this.jwtService.signAsync(
+        {
+          id: user.id,
+          project: token.project,
+        },
+        {
+          jwtid: String(token.id),
+          expiresIn: '30d',
+        },
+      ),
     };
   }
 

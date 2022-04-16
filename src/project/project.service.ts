@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RoleType } from '@prisma/client';
+import { BillingType, RoleType } from '@prisma/client';
 import slugify from 'slugify';
 import { PrismaService } from 'src/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -18,6 +18,11 @@ export class ProjectService {
           remove: /[^a-z0-9 ]/i,
           lower: true,
         }),
+        billing: {
+          create: {
+            type: BillingType.Free,
+          },
+        },
         roles: {
           create: {
             userId,
@@ -29,9 +34,45 @@ export class ProjectService {
         id: true,
         name: true,
         slug: true,
-        billing: true,
+        billing: {
+          select: {
+            type: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
+      },
+    });
+  }
+
+  async findAllForUser(userId: number) {
+    return this.prismaService.project.findMany({
+      where: {
+        roles: {
+          some: {
+            userId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        billing: {
+          select: {
+            type: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+        roles: {
+          where: {
+            userId,
+          },
+          select: {
+            role: true,
+          },
+        },
       },
     });
   }
@@ -45,7 +86,11 @@ export class ProjectService {
         id: true,
         name: true,
         slug: true,
-        billing: true,
+        billing: {
+          select: {
+            type: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
         roles: {
@@ -101,7 +146,11 @@ export class ProjectService {
         id: true,
         name: true,
         slug: true,
-        billing: true,
+        billing: {
+          select: {
+            type: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -117,7 +166,11 @@ export class ProjectService {
         id: true,
         name: true,
         slug: true,
-        billing: true,
+        billing: {
+          select: {
+            type: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },

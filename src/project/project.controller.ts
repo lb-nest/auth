@@ -28,6 +28,12 @@ export class ProjectController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get()
+  findAllForUser(@Req() req: any) {
+    return this.projectService.findAllForUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   findOne(@Req() req: any) {
     return this.projectService.findOne(req.user.project.id);
