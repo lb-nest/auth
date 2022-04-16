@@ -45,38 +45,6 @@ export class ProjectService {
     });
   }
 
-  async findAllForUser(userId: number) {
-    return this.prismaService.project.findMany({
-      where: {
-        roles: {
-          some: {
-            userId,
-          },
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        billing: {
-          select: {
-            type: true,
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
-        roles: {
-          where: {
-            userId,
-          },
-          select: {
-            role: true,
-          },
-        },
-      },
-    });
-  }
-
   async findOne(id: number) {
     return this.prismaService.project.findUnique({
       where: {

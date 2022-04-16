@@ -28,34 +28,28 @@ export class ProjectController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get()
-  findAllForUser(@Req() req: any) {
-    return this.projectService.findAllForUser(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
+  @Get('@me')
   findOne(@Req() req: any) {
     return this.projectService.findOne(req.user.project.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
-  @Post('me/invites')
+  @Post('@me/invites')
   invite(@Req() req: any, @Body() inviteUserDto: InviteUserDto) {
     return this.projectService.inviteUser(req.user.project.id, inviteUserDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
-  @Patch('me')
+  @Patch('@me')
   update(@Req() req: any, @Body() updateProjectDto: UpdateProjectDto) {
     return this.projectService.update(req.user.project.id, updateProjectDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
-  @Delete('me')
+  @Delete('@me')
   delete(@Req() req: any) {
     return this.projectService.delete(req.user.project.id);
   }
