@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
@@ -18,7 +22,54 @@ export class AuthService {
     };
   }
 
-  async token(projectId: number, user: any) {
+  async validateUser(email: string, password: string) {
+    const user = await this.prismaService.user.findFirst({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const compareResult = await bcrypt.compare(password, user.password);
+    if (compareResult) {
+      delete user.password;
+      return user;
+    }
+
+    return null;
+  }
+
+  async createToken(user: any, projectId: number) {
+    const project = await this.prismaService.project.findFirst({
+      where: {
+        id: projectId,
+        roles: {
+          some: {
+            userId: user.id,
+          },
+        },
+      },
+      select: {
+        token: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new ForbiddenException();
+    }
+
     const token = await this.prismaService.token.upsert({
       where: {
         projectId_userId: {
@@ -66,28 +117,17 @@ export class AuthService {
     };
   }
 
-  async validateUser(email: string, password: string) {
-    const user = await this.prismaService.user.findFirst({
+  async validateToken(id: number) {
+    const token = await this.prismaService.token.findUnique({
       where: {
-        email,
-      },
-      select: {
-        id: true,
-        email: true,
-        password: true,
+        id,
       },
     });
 
-    if (!user) {
-      return null;
+    if (!token) {
+      throw new UnauthorizedException();
     }
 
-    const compareResult = await bcrypt.compare(password, user.password);
-    if (compareResult) {
-      delete user.password;
-      return user;
-    }
-
-    return null;
+    return;
   }
 }

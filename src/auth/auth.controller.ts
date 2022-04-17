@@ -1,4 +1,11 @@
-import { Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Param,
+  Post,
+  Req,
+  SetMetadata,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -14,9 +21,16 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Post('projects/:id/token')
-  async token(@Param('id') id: string, @Req() req: Request) {
-    return this.authService.token(Number(id), req.user);
+  async createToken(@Param('id') id: string, @Req() req: Request) {
+    return this.authService.createToken(req.user, Number(id));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('projects/:id/token/verify')
+  async validateToken() {
+    return;
   }
 }
