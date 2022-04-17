@@ -31,6 +31,6 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('projects/:id/token/verify')
   async validateToken() {
-    return;
+    return 'ok';
   }
 }

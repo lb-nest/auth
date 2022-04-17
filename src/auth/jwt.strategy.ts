@@ -18,11 +18,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(request: any, payload: any) {
-    if (request.allowUserToken) {
+  async validate(req: any, payload: any) {
+    if (req.allowUserToken) {
       return payload;
     }
 
-    return this.authService.validateToken(payload.jti);
+    await this.authService.validateToken(Number(payload.jti));
+    return payload;
   }
 }

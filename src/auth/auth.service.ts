@@ -128,6 +128,6 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return;
+    return true;
   }
 }

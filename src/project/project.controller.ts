@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Req,
+  SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { RoleType } from '@prisma/client';
@@ -21,6 +22,7 @@ import { ProjectService } from './project.service';
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
+  @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req, @Body() createProjectDto: CreateProjectDto) {
@@ -30,6 +32,8 @@ export class ProjectController {
   @UseGuards(JwtAuthGuard)
   @Get('@me')
   findOne(@Req() req: any) {
+    console.log(req.user);
+
     return this.projectService.findOne(req.user.project.id);
   }
 
