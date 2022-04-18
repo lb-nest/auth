@@ -5,10 +5,10 @@ import {
   Get,
   Patch,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
@@ -24,25 +24,25 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('@me')
-  findOne(@Req() req: any) {
-    return this.userService.findOne(req.user.id);
+  findOne(@User() user: any) {
+    return this.userService.findOne(user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('@me/projects')
-  getProjects(@Req() req: any) {
-    return this.userService.getProjects(req.user.id);
+  getProjects(@User() user: any) {
+    return this.userService.getProjects(user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('@me')
-  update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(req.user.me, updateUserDto);
+  update(@User() user: any, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(user.me, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('@me')
-  delete(@Req() req: any) {
-    return this.userService.delete(req.user.id);
+  delete(@User() user: any) {
+    return this.userService.delete(user.id);
   }
 }

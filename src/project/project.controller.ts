@@ -5,7 +5,6 @@ import {
   Get,
   Patch,
   Post,
-  Req,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +12,7 @@ import { RoleType } from '@prisma/client';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { User } from 'src/auth/user.decorator';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -25,36 +25,34 @@ export class ProjectController {
   @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Req() req, @Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(req.user.id, createProjectDto);
+  create(@User() user: any, @Body() createProjectDto: CreateProjectDto) {
+    return this.projectService.create(user.id, createProjectDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('@me')
-  findOne(@Req() req: any) {
-    console.log(req.user);
-
-    return this.projectService.findOne(req.user.project.id);
+  findOne(@User() user: any) {
+    return this.projectService.findOne(user.project.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
   @Post('@me/invites')
-  invite(@Req() req: any, @Body() inviteUserDto: InviteUserDto) {
-    return this.projectService.inviteUser(req.user.project.id, inviteUserDto);
+  invite(@User() user: any, @Body() inviteUserDto: InviteUserDto) {
+    return this.projectService.inviteUser(user.project.id, inviteUserDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
   @Patch('@me')
-  update(@Req() req: any, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(req.user.project.id, updateProjectDto);
+  update(@User() user: any, @Body() updateProjectDto: UpdateProjectDto) {
+    return this.projectService.update(user.project.id, updateProjectDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
   @Delete('@me')
-  delete(@Req() req: any) {
-    return this.projectService.delete(req.user.project.id);
+  delete(@User() user: any) {
+    return this.projectService.delete(user.project.id);
   }
 }

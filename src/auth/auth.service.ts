@@ -117,10 +117,10 @@ export class AuthService {
     };
   }
 
-  async validateToken(id: number) {
+  async validateToken(payload: any) {
     const token = await this.prismaService.token.findUnique({
       where: {
-        id,
+        id: Number(payload.jti),
       },
     });
 
@@ -128,6 +128,6 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return true;
+    return payload;
   }
 }
