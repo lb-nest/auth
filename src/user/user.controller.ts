@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -44,5 +45,10 @@ export class UserController {
   @Delete('@me')
   delete(@User() user: any) {
     return this.userService.delete(user.id);
+  }
+
+  @Get('@me/confirm')
+  confirmEmail(@Query('code') code: string) {
+    return this.userService.confirmEmail(code);
   }
 }

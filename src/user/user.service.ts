@@ -1,4 +1,7 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -6,7 +9,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly mailerService: MailerService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const user = await this.prismaService.user.create({
@@ -45,6 +53,19 @@ export class UserService {
         },
       });
     }
+
+    const url = this.configService.get<string>('FRONTEND_URL');
+    const code = await this.jwtService.signAsync(String(user.id));
+
+    await this.mailerService.sendMail({
+      subject: 'Welcome to Leadball! Confirm your Email',
+      to: user.email,
+      template: 'confirmation',
+      context: {
+        name: user.name,
+        url: url.concat(`/confirm?code=${code}`),
+      },
+    });
 
     return user;
   }
@@ -129,6 +150,19 @@ export class UserService {
         confirmed: true,
         createdAt: true,
         updatedAt: true,
+      },
+    });
+  }
+
+  async confirmEmail(code: string) {
+    const id = await this.jwtService.verifyAsync(code);
+
+    await this.prismaService.user.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        confirmed: true,
       },
     });
   }

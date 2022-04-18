@@ -1,4 +1,6 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BillingType, RoleType } from '@prisma/client';
 import slugify from 'slugify';
 import { PrismaService } from 'src/prisma.service';
@@ -8,7 +10,11 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+    private readonly mailerService: MailerService,
+  ) {}
 
   async create(userId: number, createProjectDto: CreateProjectDto) {
     return this.prismaService.project.create({
@@ -100,6 +106,15 @@ export class ProjectService {
       data: {
         projectId,
         email: inviteUserDto.email,
+      },
+    });
+
+    await this.mailerService.sendMail({
+      subject: 'New invitation to the project',
+      to: inviteUserDto.email,
+      template: 'invitation',
+      context: {
+        url: this.configService.get<string>('FRONTEND_URL'),
       },
     });
   }
