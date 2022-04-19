@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -23,24 +24,28 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Get('@me')
   findOne(@User() user: any) {
     return this.userService.findOne(user.id);
   }
 
+  @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Get('@me/projects')
   getProjects(@User() user: any) {
     return this.userService.getProjects(user.id);
   }
 
+  @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Patch('@me')
   update(@User() user: any, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(user.me, updateUserDto);
+    return this.userService.update(user.id, updateUserDto);
   }
 
+  @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
   @Delete('@me')
   delete(@User() user: any) {
