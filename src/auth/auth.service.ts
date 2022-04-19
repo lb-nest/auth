@@ -57,13 +57,6 @@ export class AuthService {
           },
         },
       },
-      select: {
-        token: {
-          select: {
-            id: true,
-          },
-        },
-      },
     });
 
     if (!project) {
@@ -83,7 +76,6 @@ export class AuthService {
       },
       update: {},
       select: {
-        id: true,
         project: {
           select: {
             id: true,
@@ -110,7 +102,6 @@ export class AuthService {
           project: token.project,
         },
         {
-          jwtid: String(token.id),
           expiresIn: '30d',
         },
       ),
@@ -120,7 +111,10 @@ export class AuthService {
   async validateToken(payload: any) {
     const token = await this.prismaService.token.findUnique({
       where: {
-        id: Number(payload.jti),
+        projectId_userId: {
+          projectId: payload.project.id,
+          userId: payload.id,
+        },
       },
     });
 

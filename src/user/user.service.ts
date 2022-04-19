@@ -55,7 +55,9 @@ export class UserService {
     }
 
     const url = this.configService.get<string>('FRONTEND_URL');
-    const code = await this.jwtService.signAsync(String(user.id));
+    const code = await this.jwtService.signAsync({
+      id: user.id,
+    });
 
     await this.mailerService.sendMail({
       subject: 'Welcome to Leadball! Confirm your Email',
@@ -155,11 +157,11 @@ export class UserService {
   }
 
   async confirmEmail(code: string) {
-    const id = await this.jwtService.verifyAsync(code);
+    const user = await this.jwtService.verifyAsync(code);
 
     await this.prismaService.user.update({
       where: {
-        id: Number(id),
+        id: user.id,
       },
       data: {
         confirmed: true,
