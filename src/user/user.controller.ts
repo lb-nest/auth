@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   Patch,
   Post,
   Query,
@@ -30,21 +29,6 @@ export class UserController {
   @Get('@me')
   findMe(@User() user: any) {
     return this.userService.findOne(user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  findAll(@User() user: any, @Query('ids') ids: string) {
-    return this.userService.findAll(
-      user.project.id,
-      ids?.split(',').map(Number),
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  findOne(@User() user: any, @Param('id') id: string) {
-    return this.userService.findOne(Number(id), user.project.id);
   }
 
   @SetMetadata('allowUserToken', true)

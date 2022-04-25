@@ -119,6 +119,30 @@ export class ProjectService {
     });
   }
 
+  async getUsers(projectId: number, ids?: number[]) {
+    return this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+        roles: {
+          some: {
+            projectId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+        email: true,
+        confirmed: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
   async update(id: number, updateProjectDto: UpdateProjectDto) {
     return this.prismaService.project.update({
       where: {

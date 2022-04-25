@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Post,
+  Query,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
@@ -40,6 +41,15 @@ export class ProjectController {
   @Post('@me/invites')
   invite(@User() user: any, @Body() inviteUserDto: InviteUserDto) {
     return this.projectService.inviteUser(user.project.id, inviteUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('@me/users')
+  getUsers(@User() user: any, @Query('ids') ids?: string) {
+    return this.projectService.getUsers(
+      user.project.id,
+      ids?.split(',').map(Number),
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

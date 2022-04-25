@@ -72,39 +72,10 @@ export class UserService {
     return user;
   }
 
-  async findAll(projectId: number, ids?: number[]) {
-    return this.prismaService.user.findMany({
-      where: {
-        id: {
-          in: ids,
-        },
-        roles: {
-          some: {
-            projectId,
-          },
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        email: true,
-        confirmed: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-  }
-
-  async findOne(id: number, projectId?: number) {
-    return this.prismaService.user.findFirst({
+  async findOne(id: number) {
+    return this.prismaService.user.findUnique({
       where: {
         id,
-        roles: {
-          some: {
-            projectId,
-          },
-        },
       },
       select: {
         id: true,
