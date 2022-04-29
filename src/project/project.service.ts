@@ -85,7 +85,7 @@ export class ProjectService {
   }
 
   async inviteUser(projectId: number, inviteUserDto: InviteUserDto) {
-    const user = await this.prismaService.user.findFirst({
+    const user = await this.prismaService.user.findUnique({
       where: {
         email: inviteUserDto.email,
       },
@@ -105,7 +105,7 @@ export class ProjectService {
     await this.prismaService.invite.create({
       data: {
         projectId,
-        email: inviteUserDto.email,
+        ...inviteUserDto,
       },
     });
 
