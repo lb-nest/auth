@@ -96,15 +96,10 @@ export class AuthService {
     });
 
     return {
-      token: await this.jwtService.signAsync(
-        {
-          id: user.id,
-          project: token.project,
-        },
-        {
-          expiresIn: '30d',
-        },
-      ),
+      token: await this.jwtService.signAsync({
+        id: user.id,
+        project: token.project,
+      }),
     };
   }
 
