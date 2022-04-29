@@ -45,6 +45,19 @@ export class ProjectService {
             type: true,
           },
         },
+        roles: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                email: true,
+              },
+            },
+            role: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -65,8 +78,6 @@ export class ProjectService {
             type: true,
           },
         },
-        createdAt: true,
-        updatedAt: true,
         roles: {
           select: {
             user: {
@@ -80,6 +91,8 @@ export class ProjectService {
             role: true,
           },
         },
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
@@ -137,6 +150,11 @@ export class ProjectService {
         avatarUrl: true,
         email: true,
         confirmed: true,
+        roles: {
+          select: {
+            role: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -158,6 +176,19 @@ export class ProjectService {
             type: true,
           },
         },
+        roles: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                email: true,
+              },
+            },
+            role: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -176,6 +207,19 @@ export class ProjectService {
         billing: {
           select: {
             type: true,
+          },
+        },
+        roles: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+                email: true,
+              },
+            },
+            role: true,
           },
         },
         createdAt: true,
