@@ -4,9 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { BillingType, RoleType } from '@prisma/client';
 import slugify from 'slugify';
 import { PrismaService } from 'src/prisma.service';
+import { UserWithRole } from 'src/user/entities/user-with-role.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { Project } from './entities/project.entity';
 
 @Injectable()
 export class ProjectService {
@@ -16,7 +18,10 @@ export class ProjectService {
     private readonly mailerService: MailerService,
   ) {}
 
-  async create(userId: number, createProjectDto: CreateProjectDto) {
+  async create(
+    userId: number,
+    createProjectDto: CreateProjectDto,
+  ): Promise<Project> {
     return this.prismaService.project.create({
       data: {
         ...createProjectDto,
@@ -36,68 +41,27 @@ export class ProjectService {
           },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        billing: {
-          select: {
-            type: true,
-          },
-        },
-        roles: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatarUrl: true,
-                email: true,
-              },
-            },
-            role: true,
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        billing: true,
       },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Project> {
     return this.prismaService.project.findUnique({
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        billing: {
-          select: {
-            type: true,
-          },
-        },
-        roles: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatarUrl: true,
-                email: true,
-              },
-            },
-            role: true,
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        billing: true,
       },
     });
   }
 
-  async inviteUser(projectId: number, inviteUserDto: InviteUserDto) {
+  async inviteUser(
+    projectId: number,
+    inviteUserDto: InviteUserDto,
+  ): Promise<void> {
     const user = await this.prismaService.user.findUnique({
       where: {
         email: inviteUserDto.email,
@@ -105,7 +69,7 @@ export class ProjectService {
     });
 
     if (user) {
-      await this.prismaService.userRole.create({
+      await this.prismaService.role.create({
         data: {
           projectId,
           userId: user.id,
@@ -132,7 +96,7 @@ export class ProjectService {
     });
   }
 
-  async getUsers(projectId: number, ids?: number[]) {
+  async getUsers(projectId: number, ids?: number[]): Promise<UserWithRole[]> {
     return this.prismaService.user.findMany({
       where: {
         id: {
@@ -144,86 +108,34 @@ export class ProjectService {
           },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        email: true,
-        confirmed: true,
-        roles: {
-          select: {
-            role: true,
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        roles: true,
       },
     });
   }
 
-  async update(id: number, updateProjectDto: UpdateProjectDto) {
+  async update(
+    id: number,
+    updateProjectDto: UpdateProjectDto,
+  ): Promise<Project> {
     return this.prismaService.project.update({
       where: {
         id,
       },
       data: updateProjectDto,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        billing: {
-          select: {
-            type: true,
-          },
-        },
-        roles: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatarUrl: true,
-                email: true,
-              },
-            },
-            role: true,
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        billing: true,
       },
     });
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<Project> {
     return this.prismaService.project.delete({
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        billing: {
-          select: {
-            type: true,
-          },
-        },
-        roles: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                avatarUrl: true,
-                email: true,
-              },
-            },
-            role: true,
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        billing: true,
       },
     });
   }

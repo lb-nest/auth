@@ -4,8 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
+import { ProjectWithRole } from 'src/project/entities/project-with-role.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -16,20 +18,11 @@ export class UserService {
     private readonly mailerService: MailerService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const user = await this.prismaService.user.create({
       data: {
         ...createUserDto,
         password: await bcrypt.hash(createUserDto.password, 10),
-      },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        email: true,
-        confirmed: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 
@@ -40,7 +33,7 @@ export class UserService {
     });
 
     if (invites.length > 0) {
-      await this.prismaService.userRole.createMany({
+      await this.prismaService.role.createMany({
         data: invites.map(({ projectId }) => ({
           projectId,
           userId: user.id,
@@ -72,24 +65,15 @@ export class UserService {
     return user;
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<User> {
     return this.prismaService.user.findUnique({
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        email: true,
-        confirmed: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
   }
 
-  async getProjects(id: number) {
+  async getProjects(id: number): Promise<ProjectWithRole[]> {
     return this.prismaService.project.findMany({
       where: {
         roles: {
@@ -100,23 +84,14 @@ export class UserService {
           },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
+      include: {
         billing: true,
-        createdAt: true,
-        updatedAt: true,
-        roles: {
-          select: {
-            role: true,
-          },
-        },
+        roles: true,
       },
     });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     return this.prismaService.user.update({
       where: {
         id,
@@ -127,36 +102,18 @@ export class UserService {
           ? await bcrypt.hash(updateUserDto.password, 10)
           : undefined,
       },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        email: true,
-        confirmed: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<User> {
     return this.prismaService.user.delete({
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
-        avatarUrl: true,
-        email: true,
-        confirmed: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
   }
 
-  async confirmEmail(code: string) {
+  async confirmEmail(code: string): Promise<void> {
     const user = await this.jwtService.verifyAsync(code);
 
     await this.prismaService.user.update({

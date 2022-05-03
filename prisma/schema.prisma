@@ -11,16 +11,16 @@ datasource db {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
   password  String
   name      String
   avatarUrl String?
-  confirmed Boolean    @default(false)
+  confirmed Boolean  @default(false)
   token     Token[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  roles     UserRole[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  roles     Role[]
 }
 
 model Token {
@@ -45,14 +45,14 @@ model Billing {
 }
 
 model Project {
-  id        Int        @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
   slug      String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   token     Token[]
   billing   Billing?
-  roles     UserRole[]
+  roles     Role[]
   Invite    Invite[]
 }
 
@@ -71,7 +71,7 @@ enum RoleType {
   Owner
 }
 
-model UserRole {
+model Role {
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectId Int

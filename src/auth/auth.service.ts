@@ -6,6 +6,8 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
+import { TokenPayload } from './entities/token-payload.entity';
+import { Token } from './entities/token.entity';
 
 @Injectable()
 export class AuthService {
@@ -14,16 +16,19 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(user: any) {
+  async login(payload: Omit<TokenPayload, 'project'>): Promise<Token> {
     return {
-      token: await this.jwtService.signAsync(user, {
+      token: await this.jwtService.signAsync(payload, {
         expiresIn: '1h',
       }),
     };
   }
 
-  async validateUser(email: string, password: string) {
-    const user = await this.prismaService.user.findFirst({
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<Omit<TokenPayload, 'project'>> {
+    const user = await this.prismaService.user.findUnique({
       where: {
         email,
       },
@@ -38,8 +43,8 @@ export class AuthService {
       return null;
     }
 
-    const compareResult = await bcrypt.compare(password, user.password);
-    if (compareResult) {
+    const result = await bcrypt.compare(password, user.password);
+    if (result) {
       delete user.password;
       return user;
     }
@@ -47,7 +52,10 @@ export class AuthService {
     return null;
   }
 
-  async createToken(user: any, projectId: number) {
+  async createToken(
+    user: Omit<TokenPayload, 'project'>,
+    projectId: number,
+  ): Promise<Token> {
     const project = await this.prismaService.project.findFirst({
       where: {
         id: projectId,
@@ -103,7 +111,11 @@ export class AuthService {
     };
   }
 
-  async validateToken(payload: any) {
+  async validateToken(payload: TokenPayload): Promise<Required<TokenPayload>> {
+    if (!payload.project) {
+      throw new UnauthorizedException();
+    }
+
     const token = await this.prismaService.token.findUnique({
       where: {
         projectId_userId: {
@@ -117,6 +129,6 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    return payload;
+    return payload as Required<TokenPayload>;
   }
 }

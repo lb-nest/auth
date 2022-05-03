@@ -1,7 +1,8 @@
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import * as path from 'path';
 import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
@@ -15,11 +16,11 @@ import { UserModule } from './user/user.module';
       useFactory: (configService: ConfigService) => ({
         transport: configService.get<string>('MAILER_TRANSPORT'),
         defaults: {
-          from: '"No Reply" <noreply@leadball.io>',
+          from: 'Leadball <noreply@leadball.io>',
         },
         template: {
-          dir: path.join(__dirname, '@templates'),
           adapter: new HandlebarsAdapter(),
+          dir: path.join(__dirname, '@templates'),
           options: {
             strict: true,
           },
@@ -30,6 +31,12 @@ import { UserModule } from './user/user.module';
     UserModule,
     ProjectModule,
     AuthModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
+    },
   ],
 })
 export class AppModule {}
