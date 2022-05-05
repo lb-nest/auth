@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { Role } from 'src/user/entities/role.entity';
 import { Billing } from './billing.entity';
 
 export class Project {
@@ -10,6 +11,9 @@ export class Project {
 
   @Type(() => Billing)
   billing: Billing;
+
+  @Type(() => Role)
+  roles: Role[];
 
   createdAt: Date;
 

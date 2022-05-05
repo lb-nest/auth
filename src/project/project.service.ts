@@ -43,6 +43,7 @@ export class ProjectService {
       },
       include: {
         billing: true,
+        roles: true,
       },
     });
   }
@@ -54,6 +55,7 @@ export class ProjectService {
       },
       include: {
         billing: true,
+        roles: true,
       },
     });
   }
@@ -125,6 +127,7 @@ export class ProjectService {
       data: updateProjectDto,
       include: {
         billing: true,
+        roles: true,
       },
     });
   }
@@ -136,6 +139,7 @@ export class ProjectService {
       },
       include: {
         billing: true,
+        roles: true,
       },
     });
   }

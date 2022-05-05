@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
-import { ProjectWithRole } from 'src/project/entities/project-with-role.entity';
+import { Project } from 'src/project/entities/project.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -73,7 +73,7 @@ export class UserService {
     });
   }
 
-  async getProjects(id: number): Promise<ProjectWithRole[]> {
+  async getProjects(id: number): Promise<Project[]> {
     return this.prismaService.project.findMany({
       where: {
         roles: {

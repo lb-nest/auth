@@ -14,7 +14,7 @@ import {
 import { Auth } from 'src/auth/auth.decorator';
 import { TokenPayload } from 'src/auth/entities/token-payload.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ProjectWithRole } from 'src/project/entities/project-with-role.entity';
+import { Project } from 'src/project/entities/project.entity';
 import { TransformInterceptor } from 'src/shared/interceptors/transform.interceptor';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -41,7 +41,7 @@ export class UserController {
 
   @SetMetadata('allowUserToken', true)
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new TransformInterceptor(ProjectWithRole))
+  @UseInterceptors(new TransformInterceptor(Project))
   @Get('@me/projects')
   getProjects(@Auth() user: Omit<TokenPayload, 'project'>) {
     return this.userService.getProjects(user.id);
