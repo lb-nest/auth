@@ -44,7 +44,7 @@ export class ProjectController {
   @UseInterceptors(new TransformInterceptor(Project))
   @Get('@me')
   findOne(@Auth() user: Required<TokenPayload>) {
-    return this.projectService.findOne(user.project.id);
+    return this.projectService.findOne(user.project.id, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -48,14 +48,18 @@ export class ProjectService {
     });
   }
 
-  async findOne(id: number): Promise<Project> {
+  async findOne(id: number, userId: number): Promise<Project> {
     return this.prismaService.project.findUnique({
       where: {
         id,
       },
       include: {
         billing: true,
-        roles: true,
+        roles: {
+          where: {
+            userId,
+          },
+        },
       },
     });
   }
