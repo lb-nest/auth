@@ -1,5 +1,10 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BillingType, RoleType } from '@prisma/client';
 import slugify from 'slugify';
@@ -22,34 +27,42 @@ export class ProjectService {
     userId: number,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
-    return this.prismaService.project.create({
-      data: {
-        ...createProjectDto,
-        slug: slugify(createProjectDto.name, {
-          remove: /[^a-z0-9 ]/i,
-          lower: true,
-        }),
-        billing: {
-          create: {
-            type: BillingType.Free,
+    const project = await this.prismaService.project
+      .create({
+        data: {
+          ...createProjectDto,
+          slug: slugify(createProjectDto.name, {
+            remove: /[^a-z0-9 ]/i,
+            lower: true,
+          }),
+          billing: {
+            create: {
+              type: BillingType.Free,
+            },
+          },
+          roles: {
+            create: {
+              userId,
+              role: RoleType.Owner,
+            },
           },
         },
-        roles: {
-          create: {
-            userId,
-            role: RoleType.Owner,
-          },
+        include: {
+          billing: true,
+          roles: true,
         },
-      },
-      include: {
-        billing: true,
-        roles: true,
-      },
-    });
+      })
+      .catch(() => undefined);
+
+    if (!project) {
+      throw new ConflictException();
+    }
+
+    return project;
   }
 
   async findOne(id: number, userId: number): Promise<Project> {
-    return this.prismaService.project.findUnique({
+    const project = await this.prismaService.project.findUnique({
       where: {
         id,
       },
@@ -62,6 +75,12 @@ export class ProjectService {
         },
       },
     });
+
+    if (!project) {
+      throw new NotFoundException();
+    }
+
+    return project;
   }
 
   async inviteUser(
@@ -102,24 +121,6 @@ export class ProjectService {
     });
   }
 
-  async getUsers(projectId: number, ids?: number[]): Promise<UserWithRole[]> {
-    return this.prismaService.user.findMany({
-      where: {
-        id: {
-          in: ids,
-        },
-        roles: {
-          some: {
-            projectId,
-          },
-        },
-      },
-      include: {
-        roles: true,
-      },
-    });
-  }
-
   async update(
     id: number,
     updateProjectDto: UpdateProjectDto,
@@ -146,5 +147,30 @@ export class ProjectService {
         roles: true,
       },
     });
+  }
+
+  async findAllUsers(
+    projectId: number,
+    ids?: number[],
+  ): Promise<UserWithRole[]> {
+    try {
+      return await this.prismaService.user.findMany({
+        where: {
+          id: {
+            in: ids,
+          },
+          roles: {
+            some: {
+              projectId,
+            },
+          },
+        },
+        include: {
+          roles: true,
+        },
+      });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 }

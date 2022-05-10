@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { plainToClass } from 'class-transformer';
 import { PrismaService } from 'src/prisma.service';
 import { TokenPayload } from './entities/token-payload.entity';
 import { Token } from './entities/token.entity';
@@ -56,52 +57,49 @@ export class AuthService {
     user: Omit<TokenPayload, 'project'>,
     projectId: number,
   ): Promise<Token> {
-    const project = await this.prismaService.project.findFirst({
-      where: {
-        id: projectId,
-        roles: {
-          some: {
-            userId: user.id,
-          },
+    const roles = await this.prismaService.project
+      .findUnique({
+        where: {
+          id: projectId,
         },
-      },
-    });
+      })
+      .roles({
+        where: {
+          userId: user.id,
+        },
+        include: {
+          project: true,
+        },
+      });
 
-    if (!project) {
+    if (roles.length === 0) {
       throw new ForbiddenException();
     }
 
-    const token = await this.prismaService.token.upsert({
-      where: {
-        projectId_userId: {
+    const token = plainToClass(
+      TokenPayload,
+      await this.prismaService.token.upsert({
+        where: {
+          projectId_userId: {
+            projectId,
+            userId: user.id,
+          },
+        },
+        create: {
           projectId,
           userId: user.id,
         },
-      },
-      create: {
-        projectId,
-        userId: user.id,
-      },
-      update: {},
-      select: {
-        project: {
-          select: {
-            id: true,
-            roles: {
-              select: {
-                role: true,
-              },
-            },
-            billing: {
-              select: {
-                id: true,
-                type: true,
-              },
+        update: {},
+        select: {
+          project: {
+            include: {
+              roles: true,
+              billing: true,
             },
           },
         },
-      },
-    });
+      }),
+    );
 
     return {
       token: await this.jwtService.signAsync({

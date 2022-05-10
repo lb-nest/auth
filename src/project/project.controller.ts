@@ -61,8 +61,11 @@ export class ProjectController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(new TransformInterceptor(UserWithRole))
   @Get('@me/users')
-  getUsers(@Auth() user: Required<TokenPayload>, @Query('ids') ids?: string) {
-    return this.projectService.getUsers(
+  findAllUsers(
+    @Auth() user: Required<TokenPayload>,
+    @Query('ids') ids?: string,
+  ) {
+    return this.projectService.findAllUsers(
       user.project.id,
       ids?.split(',').map(Number),
     );

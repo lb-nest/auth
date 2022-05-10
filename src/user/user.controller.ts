@@ -43,8 +43,8 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(new TransformInterceptor(Project))
   @Get('@me/projects')
-  getProjects(@Auth() user: Omit<TokenPayload, 'project'>) {
-    return this.userService.getProjects(user.id);
+  findAllProjects(@Auth() user: Omit<TokenPayload, 'project'>) {
+    return this.userService.findAllProjects(user.id);
   }
 
   @SetMetadata('allowUserToken', true)

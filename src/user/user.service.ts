@@ -1,5 +1,10 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -19,12 +24,18 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.prismaService.user.create({
-      data: {
-        ...createUserDto,
-        password: await bcrypt.hash(createUserDto.password, 10),
-      },
-    });
+    const user = await this.prismaService.user
+      .create({
+        data: {
+          ...createUserDto,
+          password: await bcrypt.hash(createUserDto.password, 10),
+        },
+      })
+      .catch(() => undefined);
+
+    if (!user) {
+      throw new ConflictException();
+    }
 
     const invites = await this.prismaService.invite.findMany({
       where: {
@@ -66,29 +77,17 @@ export class UserService {
   }
 
   async findOne(id: number): Promise<User> {
-    return this.prismaService.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: {
         id,
       },
     });
-  }
 
-  async getProjects(id: number): Promise<Project[]> {
-    return this.prismaService.project.findMany({
-      where: {
-        roles: {
-          some: {
-            user: {
-              id,
-            },
-          },
-        },
-      },
-      include: {
-        billing: true,
-        roles: true,
-      },
-    });
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
@@ -113,9 +112,30 @@ export class UserService {
     });
   }
 
+  async findAllProjects(id: number): Promise<Project[]> {
+    try {
+      return await this.prismaService.project.findMany({
+        where: {
+          roles: {
+            some: {
+              user: {
+                id,
+              },
+            },
+          },
+        },
+        include: {
+          billing: true,
+          roles: true,
+        },
+      });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
   async confirmEmail(code: string): Promise<void> {
     const user = await this.jwtService.verifyAsync(code);
-
     await this.prismaService.user.update({
       where: {
         id: user.id,
