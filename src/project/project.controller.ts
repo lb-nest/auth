@@ -96,7 +96,7 @@ export class ProjectController {
     @Param('id') id: string,
     @Auth() user: Omit<TokenPayload, 'project'>,
   ) {
-    return this.projectService.createToken(user.id, Number(id));
+    return this.projectService.createToken(Number(id), user.id);
   }
 
   @UseGuards(JwtAuthGuard)
