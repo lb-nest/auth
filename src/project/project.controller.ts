@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
   Patch,
   Post,
   Query,
@@ -19,8 +20,8 @@ import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { TransformInterceptor } from 'src/shared/interceptors/transform.interceptor';
 import { UserWithRole } from 'src/user/entities/user-with-role.entity';
+import { CreateInviteDto } from './dto/create-invite.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 import { ProjectService } from './project.service';
@@ -49,30 +50,6 @@ export class ProjectController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleType.Owner)
-  @Post('@me/invites')
-  @HttpCode(204)
-  invite(
-    @Auth() user: Required<TokenPayload>,
-    @Body() inviteUserDto: InviteUserDto,
-  ) {
-    return this.projectService.inviteUser(user.project.id, inviteUserDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new TransformInterceptor(UserWithRole))
-  @Get('@me/users')
-  findAllUsers(
-    @Auth() user: Required<TokenPayload>,
-    @Query('ids') ids?: string,
-  ) {
-    return this.projectService.findAllUsers(
-      user.project.id,
-      ids?.split(',').map(Number),
-    );
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleType.Owner)
   @UseInterceptors(new TransformInterceptor(Project))
   @Patch('@me')
   update(
@@ -88,5 +65,44 @@ export class ProjectController {
   @Delete('@me')
   delete(@Auth() user: Required<TokenPayload>) {
     return this.projectService.delete(user.project.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleType.Owner)
+  @Post('@me/users')
+  @HttpCode(204)
+  createInvite(
+    @Auth() user: Required<TokenPayload>,
+    @Body() createInviteDto: CreateInviteDto,
+  ) {
+    return this.projectService.createInvite(user.project.id, createInviteDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(new TransformInterceptor(UserWithRole))
+  @Get('@me/users')
+  findUsers(@Auth() user: Required<TokenPayload>, @Query('ids') ids?: string) {
+    return this.projectService.findUsers(
+      user.project.id,
+      ids?.split(',').map(Number),
+    );
+  }
+
+  @SetMetadata('allowUserToken', true)
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/token')
+  @HttpCode(200)
+  createToken(
+    @Param('id') id: string,
+    @Auth() user: Omit<TokenPayload, 'project'>,
+  ) {
+    return this.projectService.createToken(user.id, Number(id));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('@me/token/verify')
+  @HttpCode(204)
+  validateToken(): Promise<void> {
+    return;
   }
 }

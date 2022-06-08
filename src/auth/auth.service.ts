@@ -1,11 +1,6 @@
-import {
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { plainToClass } from 'class-transformer';
 import { PrismaService } from 'src/prisma.service';
 import { TokenPayload } from './entities/token-payload.entity';
 import { Token } from './entities/token.entity';
@@ -25,7 +20,7 @@ export class AuthService {
     };
   }
 
-  async validateUser(
+  async validateCredentials(
     email: string,
     password: string,
   ): Promise<Omit<TokenPayload, 'project'>> {
@@ -35,7 +30,6 @@ export class AuthService {
       },
       select: {
         id: true,
-        email: true,
         password: true,
       },
     });
@@ -51,62 +45,6 @@ export class AuthService {
     }
 
     return null;
-  }
-
-  async createToken(
-    user: Omit<TokenPayload, 'project'>,
-    projectId: number,
-  ): Promise<Token> {
-    const roles = await this.prismaService.project
-      .findUnique({
-        where: {
-          id: projectId,
-        },
-      })
-      .roles({
-        where: {
-          userId: user.id,
-        },
-        include: {
-          project: true,
-        },
-      });
-
-    if (roles.length === 0) {
-      throw new ForbiddenException();
-    }
-
-    const token = plainToClass(
-      TokenPayload,
-      await this.prismaService.token.upsert({
-        where: {
-          projectId_userId: {
-            projectId,
-            userId: user.id,
-          },
-        },
-        create: {
-          projectId,
-          userId: user.id,
-        },
-        update: {},
-        select: {
-          project: {
-            include: {
-              roles: true,
-              billing: true,
-            },
-          },
-        },
-      }),
-    );
-
-    return {
-      token: await this.jwtService.signAsync({
-        id: user.id,
-        project: token.project,
-      }),
-    };
   }
 
   async validateToken(payload: TokenPayload): Promise<Required<TokenPayload>> {

@@ -2,8 +2,7 @@ import { BillingType, RoleType } from '@prisma/client';
 
 export class TokenPayload {
   id: number;
-  email: string;
-  project?: {
+  project: {
     id: number;
     billing: {
       id: number;

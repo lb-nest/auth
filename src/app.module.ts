@@ -20,7 +20,7 @@ import { UserModule } from './user/user.module';
         },
         template: {
           adapter: new HandlebarsAdapter(),
-          dir: path.join(__dirname, '@templates'),
+          dir: path.join(__dirname, '@email'),
           options: {
             strict: true,
           },
