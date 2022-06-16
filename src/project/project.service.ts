@@ -153,13 +153,22 @@ export class ProjectService {
         update: {},
         select: {
           project: {
-            include: {
+            select: {
+              id: true,
               roles: {
                 where: {
                   userId,
                 },
+                select: {
+                  role: true,
+                },
               },
-              billing: true,
+              billing: {
+                select: {
+                  id: true,
+                  type: true,
+                },
+              },
             },
           },
         },
