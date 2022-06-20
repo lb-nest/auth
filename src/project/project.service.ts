@@ -221,7 +221,10 @@ export class ProjectService {
     });
   }
 
-  async findUsers(projectId: number, ids?: number[]): Promise<UserWithRole[]> {
+  async findAllUsers(
+    projectId: number,
+    ids?: number[],
+  ): Promise<UserWithRole[]> {
     try {
       return await this.prismaService.user.findMany({
         where: {
