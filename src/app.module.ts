@@ -23,19 +23,22 @@ import { UserModule } from './user/user.module';
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        transport: configService.get<string>('MAILER_TRANSPORT'),
-        defaults: {
-          from: 'Leadball <noreply@leadball.io>',
-        },
-        template: {
-          adapter: new HandlebarsAdapter(),
-          dir: path.join(__dirname, '@email'),
-          options: {
-            strict: true,
+      useFactory: (configService: ConfigService) => {
+        const transport = configService.get<string>('MAILER_TRANSPORT');
+        return {
+          transport,
+          defaults: {
+            from: `lb-nest <${new URL(transport).username}>`,
           },
-        },
-      }),
+          template: {
+            adapter: new HandlebarsAdapter(),
+            dir: path.join(__dirname, '@email'),
+            options: {
+              strict: true,
+            },
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     UserModule,

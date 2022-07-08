@@ -64,7 +64,7 @@ export class UserService {
     });
 
     await this.mailerService.sendMail({
-      subject: 'Welcome to Leadball! Confirm your Email',
+      subject: 'Email confirmation',
       to: user.email,
       template: 'confirmation',
       context: {
