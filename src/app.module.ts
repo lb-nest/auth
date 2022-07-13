@@ -17,7 +17,6 @@ import { UserModule } from './user/user.module';
         PORT: Joi.number().default(8080),
         SECRET: Joi.string().required(),
         MAILER_TRANSPORT: Joi.string().required(),
-        MAILER_SECRET: Joi.string().required(),
         FRONTEND_URL: Joi.string().uri().required(),
       }),
     }),
