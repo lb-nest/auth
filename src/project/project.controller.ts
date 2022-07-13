@@ -104,8 +104,7 @@ export class ProjectController {
 
   @UseGuards(JwtAuthGuard)
   @Get('@me/token/verify')
-  @HttpCode(204)
-  validateToken(): Promise<void> {
-    return;
+  async validateToken(@Auth() user: TokenPayload): Promise<TokenPayload> {
+    return user;
   }
 }
