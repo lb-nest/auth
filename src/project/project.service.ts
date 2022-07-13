@@ -1,13 +1,8 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { RpcException } from '@nestjs/microservices';
 import { BillingType, RoleType } from '@prisma/client';
 import { plainToClass } from 'class-transformer';
 import slugify from 'slugify';
@@ -33,42 +28,34 @@ export class ProjectService {
     userId: number,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
-    const project = await this.prismaService.project
-      .create({
-        data: {
-          ...createProjectDto,
-          slug: slugify(createProjectDto.name, {
-            remove: /[^a-z0-9 ]/i,
-            lower: true,
-          }),
-          billing: {
-            create: {
-              type: BillingType.Free,
-            },
-          },
-          roles: {
-            create: {
-              userId,
-              role: RoleType.Owner,
-            },
+    return this.prismaService.project.create({
+      data: {
+        ...createProjectDto,
+        slug: slugify(createProjectDto.name, {
+          remove: /[^a-z0-9 ]/i,
+          lower: true,
+        }),
+        billing: {
+          create: {
+            type: BillingType.Free,
           },
         },
-        include: {
-          billing: true,
-          roles: true,
+        roles: {
+          create: {
+            userId,
+            role: RoleType.Owner,
+          },
         },
-      })
-      .catch(() => undefined);
-
-    if (!project) {
-      throw new ConflictException();
-    }
-
-    return project;
+      },
+      include: {
+        billing: true,
+        roles: true,
+      },
+    });
   }
 
-  async findOne(id: number, userId: number): Promise<Project> {
-    const project = await this.prismaService.project.findUnique({
+  async findMe(id: number, userId: number): Promise<Project> {
+    return this.prismaService.project.findUniqueOrThrow({
       where: {
         id,
       },
@@ -81,12 +68,6 @@ export class ProjectService {
         },
       },
     });
-
-    if (!project) {
-      throw new NotFoundException();
-    }
-
-    return project;
   }
 
   async update(
@@ -105,7 +86,7 @@ export class ProjectService {
     });
   }
 
-  async delete(id: number): Promise<Project> {
+  async remove(id: number): Promise<Project> {
     return this.prismaService.project.delete({
       where: {
         id,
@@ -134,7 +115,7 @@ export class ProjectService {
       });
 
     if (roles.length === 0) {
-      throw new ForbiddenException();
+      throw new RpcException(new ForbiddenException());
     }
 
     const token = plainToClass(
@@ -225,24 +206,20 @@ export class ProjectService {
     projectId: number,
     ids?: number[],
   ): Promise<UserWithRole[]> {
-    try {
-      return await this.prismaService.user.findMany({
-        where: {
-          id: {
-            in: ids,
-          },
-          roles: {
-            some: {
-              projectId,
-            },
+    return this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+        roles: {
+          some: {
+            projectId,
           },
         },
-        include: {
-          roles: true,
-        },
-      });
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+      },
+      include: {
+        roles: true,
+      },
+    });
   }
 }

@@ -1,10 +1,5 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -24,18 +19,12 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.prismaService.user
-      .create({
-        data: {
-          ...createUserDto,
-          password: await bcrypt.hash(createUserDto.password, 10),
-        },
-      })
-      .catch(() => undefined);
-
-    if (!user) {
-      throw new ConflictException();
-    }
+    const user = await this.prismaService.user.create({
+      data: {
+        ...createUserDto,
+        password: await bcrypt.hash(createUserDto.password, 10),
+      },
+    });
 
     const invites = await this.prismaService.invite.findMany({
       where: {
@@ -44,18 +33,19 @@ export class UserService {
     });
 
     if (invites.length > 0) {
-      await this.prismaService.role.createMany({
-        data: invites.map(({ projectId }) => ({
-          projectId,
-          userId: user.id,
-        })),
-      });
-
-      await this.prismaService.invite.deleteMany({
-        where: {
-          email: createUserDto.email,
-        },
-      });
+      await this.prismaService.$transaction([
+        this.prismaService.role.createMany({
+          data: invites.map(({ projectId }) => ({
+            projectId,
+            userId: user.id,
+          })),
+        }),
+        this.prismaService.invite.deleteMany({
+          where: {
+            email: createUserDto.email,
+          },
+        }),
+      ]);
     }
 
     const url = this.configService.get<string>('FRONTEND_URL');
@@ -77,17 +67,11 @@ export class UserService {
   }
 
   async findOne(id: number): Promise<User> {
-    const user = await this.prismaService.user.findUnique({
+    return this.prismaService.user.findUniqueOrThrow({
       where: {
         id,
       },
     });
-
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
@@ -104,7 +88,7 @@ export class UserService {
     });
   }
 
-  async delete(id: number): Promise<User> {
+  async remove(id: number): Promise<User> {
     return this.prismaService.user.delete({
       where: {
         id,
@@ -113,25 +97,21 @@ export class UserService {
   }
 
   async findAllProjects(id: number): Promise<Project[]> {
-    try {
-      return await this.prismaService.project.findMany({
-        where: {
-          roles: {
-            some: {
-              user: {
-                id,
-              },
+    return this.prismaService.project.findMany({
+      where: {
+        roles: {
+          some: {
+            user: {
+              id,
             },
           },
         },
-        include: {
-          billing: true,
-          roles: true,
-        },
-      });
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+      },
+      include: {
+        billing: true,
+        roles: true,
+      },
+    });
   }
 
   async confirmEmail(code: string): Promise<void> {
