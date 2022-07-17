@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       validationSchema: Joi.object({
         DATABASE_URL: Joi.string().uri().required(),
         PORT: Joi.number().default(8080),
@@ -21,7 +22,6 @@ import { UserModule } from './user/user.module';
       }),
     }),
     MailerModule.forRootAsync({
-      imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const transport = configService.get<string>('MAILER_TRANSPORT');
         return {
