@@ -9,11 +9,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
   }
 
   canActivate(context: ExecutionContext) {
-    const http = context.switchToHttp();
-    http.getRequest().allowUserToken = this.reflector.get<boolean>(
-      'allowUserToken',
-      context.getHandler(),
-    );
+    context.switchToHttp().getRequest().allowUserToken =
+      this.reflector.get<boolean>('allowUserToken', context.getHandler());
 
     return super.canActivate(context);
   }
