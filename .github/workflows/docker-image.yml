@@ -24,6 +24,7 @@ jobs:
       uses: culshaw/read-package-node-version-actions@v1
 
     - run: echo ::set-env name=REPOSITORY_NAME::${GITHUB_REPOSITORY#*/}
+      shell: bash
 
     - name: Build and push
       uses: docker/build-push-action@v2
