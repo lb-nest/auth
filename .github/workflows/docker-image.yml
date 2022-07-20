@@ -30,7 +30,7 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v2
       env:
-        REPOSITORY_NAME: ${{ github.event.repository.name }}
+        REPOSITORY_NAME: github.event.repository.name
       with:
         context: .
         file: ./Dockerfile
