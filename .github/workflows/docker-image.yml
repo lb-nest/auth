@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
 
 env:
-  DOCKER_REPOSITORY: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}
+  DOCKER_HUB_REPOSITORY: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.repository.name }}
 
 jobs:
 
@@ -37,6 +37,6 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ${{ env.DOCKER_REPOSITORY }}:${{ steps.package.outputs.version }}
-        cache-from: type=registry,ref=${{ env.DOCKER_REPOSITORY }}:buildcache
-        cache-to: type=registry,ref=${{ env.DOCKER_REPOSITORY }}:buildcache,mode=max
+        tags: ${{ env.DOCKER_HUB_REPOSITORY }}:${{ steps.package.outputs.version }}
+        cache-from: type=registry,ref=${{ env.DOCKER_HUB_REPOSITORY }}:buildcache
+        cache-to: type=registry,ref=${{ env.DOCKER_HUB_REPOSITORY }}:buildcache,mode=max
