@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
 
 env:
-  REPOSITORY_NAME: ${{ echo $GITHUB_REF | awk -F / '{print $3}' }}
+  REPOSITORY_NAME: ${{ github.event.repository.name }}
 
 jobs:
 
