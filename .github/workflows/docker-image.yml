@@ -23,6 +23,6 @@ jobs:
         file: ./Dockerfile
         builder: ${{steps.buildx.outputs.name}}
         push: true
-        tags: ${{secrets.DOCKER_HUB_USERNAME}}/auth:latest
+        tags: ${{secrets.DOCKER_HUB_USERNAME}}/auth:$(node -p -e "require('./package.json').version")
         cache-from: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/auth:buildcache
         cache-to: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/auth:buildcache,mode=max
