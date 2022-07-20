@@ -1,6 +1,6 @@
 {
-  "name": "authorization-service",
-  "version": "0.0.1",
+  "name": "auth-service",
+  "version": "1.0.0",
   "description": "",
   "author": "",
   "private": true,
