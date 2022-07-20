@@ -23,6 +23,6 @@ jobs:
         file: ./Dockerfile
         builder: ${{steps.buildx.outputs.name}}
         push: true
-        tags: ${{secrets.DOCKER_HUB_USERNAME}}/auth:${{packageVersion}}
+        tags: ${{secrets.DOCKER_HUB_USERNAME}}/auth:${{env.npm_package_version}}
         cache-from: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/auth:buildcache
         cache-to: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/auth:buildcache,mode=max
