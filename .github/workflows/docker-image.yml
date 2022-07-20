@@ -26,8 +26,8 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
-    - name: Read node from package.json
-      id: package-node-version
+    - name: Read version from package.json
+      id: package
       uses: culshaw/read-package-node-version-actions@v1
 
     - name: Build and push
@@ -37,6 +37,6 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ${{ env.DOCKER_REPOSITORY }}:${{ steps.package-node-version.outputs.version }}
+        tags: ${{ env.DOCKER_REPOSITORY }}:${{ steps.package.outputs.version }}
         cache-from: type=registry,ref=${{ env.DOCKER_REPOSITORY }}:buildcache
         cache-to: type=registry,ref=${{ env.DOCKER_REPOSITORY }}:buildcache,mode=max
