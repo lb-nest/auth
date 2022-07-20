@@ -26,6 +26,6 @@ jobs:
         file: ./Dockerfile
         builder: ${{steps.buildx.outputs.name}}
         push: true
-        tags: ${{secrets.DOCKER_HUB_USERNAME}}/auth:${{steps.package-node-version.outputs.version}}
-        cache-from: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/auth:buildcache
-        cache-to: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/auth:buildcache,mode=max
+        tags: ${{secrets.DOCKER_HUB_USERNAME}}/${{GITHUB_REPOSITORY#*/}}:${{steps.package-node-version.outputs.version}}
+        cache-from: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/${{GITHUB_REPOSITORY#*/}}:buildcache
+        cache-to: type=registry,ref=${{secrets.DOCKER_HUB_USERNAME}}/${{GITHUB_REPOSITORY#*/}}:buildcache,mode=max
