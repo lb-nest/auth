@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
 
 env:
-  REPOSITORY_NAME: ${{ GITHUB_REPOSITORY#*/ }}
+  REPOSITORY_NAME: ${{ echo $GITHUB_REF | awk -F / '{print $3}' }}
 
 jobs:
 
