@@ -27,10 +27,11 @@ jobs:
       id: package-node-version
       uses: culshaw/read-package-node-version-actions@v1
 
+    - name: Set env
+      run: echo "GITHUB_SHA_SHORT=$(echo GITHUB_REPOSITORY#*/)" >> $GITHUB_ENV
+
     - name: Build and push
       uses: docker/build-push-action@v2
-      env:
-        REPOSITORY_NAME: github.event.repository.name
       with:
         context: .
         file: ./Dockerfile
