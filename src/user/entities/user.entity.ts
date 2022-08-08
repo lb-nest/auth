@@ -18,8 +18,4 @@ export class User implements Prisma.User {
   createdAt: Date;
 
   updatedAt: Date;
-
-  constructor(value: any) {
-    Object.assign(this, value);
-  }
 }

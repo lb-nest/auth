@@ -2,7 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import { hash } from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
 import { Project } from 'src/project/entities/project.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -12,17 +12,17 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class UserService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const user = await this.prismaService.user.create({
       data: {
         ...createUserDto,
-        password: await bcrypt.hash(createUserDto.password, 10),
+        password: await hash(createUserDto.password, 10),
       },
     });
 
@@ -82,7 +82,7 @@ export class UserService {
       data: {
         ...updateUserDto,
         password: updateUserDto.password
-          ? await bcrypt.hash(updateUserDto.password, 10)
+          ? await hash(updateUserDto.password, 10)
           : undefined,
       },
     });

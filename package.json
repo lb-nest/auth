@@ -1,6 +1,6 @@
 {
   "name": "auth-service",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "author": "",
   "private": true,
@@ -41,7 +41,6 @@
     "nodemailer": "^6.7.7",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.5.5",
@@ -56,7 +55,6 @@
     "@types/node": "^18.0.3",
     "@types/nodemailer": "^6.4.4",
     "@types/passport-jwt": "^3.0.6",
-    "@types/passport-local": "^1.0.34",
     "@types/supertest": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "^5.30.5",
     "@typescript-eslint/parser": "^5.30.5",

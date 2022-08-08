@@ -8,7 +8,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma.service';
-import { ExceptionFilter } from './shared/filters/exception.filter';
+import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -19,17 +19,22 @@ async function bootstrap() {
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
 
-  const configService = app.get(ConfigService);
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [configService.get<string>('BROKER_URL')],
-      queue: 'AUTH_QUEUE',
-    },
-  });
-
-  app.useGlobalFilters(new ExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
+  const configService = app.get(ConfigService);
+  app.connectMicroservice<MicroserviceOptions>(
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: [configService.get<string>('BROKER_URL')],
+        queue: 'AUTH_SERVICE_QUEUE',
+      },
+    },
+    {
+      inheritAppConfig: true,
+    },
+  );
 
   await app.startAllMicroservices();
 }

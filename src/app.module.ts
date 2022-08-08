@@ -4,7 +4,6 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import Joi from 'joi';
-import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
 import { UserModule } from './user/user.module';
@@ -14,16 +13,14 @@ import { UserModule } from './user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        DATABASE_URL: Joi.string().uri().required(),
         BROKER_URL: Joi.string().uri().required(),
+        DATABASE_URL: Joi.string().uri().required(),
         FRONTEND_URL: Joi.string().uri().required(),
-        PORT: Joi.number().default(8080),
         SECRET: Joi.string().required(),
         MAILER_TRANSPORT: Joi.string().required(),
       }),
     }),
     MailerModule.forRootAsync({
-      imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const transport = configService.get<string>('MAILER_TRANSPORT');
         return {
@@ -35,7 +32,7 @@ import { UserModule } from './user/user.module';
           },
           template: {
             adapter: new HandlebarsAdapter(),
-            dir: join(__dirname, '@email'),
+            dir: __dirname,
             options: {
               strict: true,
             },
@@ -44,9 +41,9 @@ import { UserModule } from './user/user.module';
       },
       inject: [ConfigService],
     }),
-    UserModule,
-    ProjectModule,
     AuthModule,
+    ProjectModule,
+    UserModule,
   ],
   providers: [
     {

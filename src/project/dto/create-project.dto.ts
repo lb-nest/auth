@@ -1,8 +1,9 @@
-import { Transform, TransformFnParams } from 'class-transformer';
-import { IsNotEmpty } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateProjectDto {
+  @Transform(({ value }) => value.trim())
+  @IsString()
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
   name: string;
 }

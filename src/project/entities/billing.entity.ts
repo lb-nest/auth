@@ -1,11 +1,11 @@
-import { BillingType } from '@prisma/client';
+import Prisma from '@prisma/client';
 import { Exclude } from 'class-transformer';
 
-export class Billing {
+export class Billing implements Prisma.Billing {
   id: number;
 
   @Exclude()
   projectId: number;
 
-  type: BillingType;
+  type: Prisma.BillingType;
 }
