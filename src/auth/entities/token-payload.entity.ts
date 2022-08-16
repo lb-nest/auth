@@ -1,15 +1,11 @@
-import { BillingType, RoleType } from '@prisma/client';
+import { Billing } from 'src/project/entities/billing.entity';
+import { Role } from 'src/user/entities/role.entity';
 
 export class TokenPayload {
   id: number;
-  project: {
+  project?: {
     id: number;
-    billing: {
-      id: number;
-      type: BillingType;
-    };
-    roles: Array<{
-      role: RoleType;
-    }>;
+    billing: Billing;
+    roles: Role[];
   };
 }

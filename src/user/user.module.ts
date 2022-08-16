@@ -9,12 +9,12 @@ import { UserService } from './user.service';
   imports: [
     JwtModule.registerAsync({
       useFactory: (config: ConfigService) => ({
-        secret: config.get('SECRET'),
+        secret: config.get<string>('SECRET'),
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, PrismaService],
+  providers: [PrismaService, UserService],
 })
 export class UserModule {}

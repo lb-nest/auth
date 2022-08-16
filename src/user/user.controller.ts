@@ -1,21 +1,10 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Patch,
-  Post,
-  Query,
-  SetMetadata,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { Auth } from 'src/auth/auth.decorator';
 import { TokenPayload } from 'src/auth/entities/token-payload.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Project } from 'src/project/entities/project.entity';
-import { TransformInterceptor } from 'src/shared/interceptors/transform.interceptor';
+import { PlainToClassInterceptor } from 'src/shared/interceptors/plain-to-class.interceptor';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -25,50 +14,45 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseInterceptors(new TransformInterceptor(User))
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  @MessagePattern('users.create')
+  @UseInterceptors(new PlainToClassInterceptor(User))
+  create(@Payload('payload') createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
-  @SetMetadata('allowUserToken', true)
+  @MessagePattern('users.@me')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new TransformInterceptor(User))
-  @Get('@me')
-  findMe(@Auth() user: Omit<TokenPayload, 'project'>) {
-    return this.userService.findOne(user.id);
+  @UseInterceptors(new PlainToClassInterceptor(User))
+  findMe(@Auth() auth: Omit<TokenPayload, 'project'>) {
+    return this.userService.findOne(auth.id);
   }
 
-  @SetMetadata('allowUserToken', true)
+  @MessagePattern('users.@me.findAllProjects')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new TransformInterceptor(Project))
-  @Get('@me/projects')
-  findAllProjects(@Auth() user: Omit<TokenPayload, 'project'>) {
-    return this.userService.findAllProjects(user.id);
+  @UseInterceptors(new PlainToClassInterceptor(Project))
+  findAllProjects(@Auth() auth: Omit<TokenPayload, 'project'>) {
+    return this.userService.findAllProjects(auth.id);
   }
 
-  @SetMetadata('allowUserToken', true)
+  @MessagePattern('users.@me.update')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new TransformInterceptor(User))
-  @Patch('@me')
+  @UseInterceptors(new PlainToClassInterceptor(User))
   update(
-    @Auth() user: Omit<TokenPayload, 'project'>,
-    @Body() updateUserDto: UpdateUserDto,
+    @Auth() auth: Omit<TokenPayload, 'project'>,
+    @Payload('payload') updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.update(user.id, updateUserDto);
+    return this.userService.update(auth.id, updateUserDto);
   }
 
-  @SetMetadata('allowUserToken', true)
+  @MessagePattern('users.@me.remove')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new TransformInterceptor(User))
-  @Delete('@me')
-  delete(@Auth() user: Omit<TokenPayload, 'project'>) {
-    return this.userService.delete(user.id);
+  @UseInterceptors(new PlainToClassInterceptor(User))
+  remove(@Auth() auth: Omit<TokenPayload, 'project'>) {
+    return this.userService.remove(auth.id);
   }
 
-  @Get('@me/confirm')
-  @HttpCode(204)
-  confirmEmail(@Query('code') code: string) {
+  @MessagePattern('users.@me.confirmEmail')
+  confirmEmail(@Payload('payload') code: string) {
     return this.userService.confirmEmail(code);
   }
 }

@@ -1,76 +1,49 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { BillingType, RoleType } from '@prisma/client';
-import { plainToClass } from 'class-transformer';
 import slugify from 'slugify';
-import { TokenPayload } from 'src/auth/entities/token-payload.entity';
 import { Token } from 'src/auth/entities/token.entity';
 import { PrismaService } from 'src/prisma.service';
 import { UserWithRole } from 'src/user/entities/user-with-role.entity';
-import { CreateInviteDto } from './dto/create-invite.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { FindAllUsersForProject } from './dto/find-all-users-for-project.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 
 @Injectable()
 export class ProjectService {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async create(
     userId: number,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
-    const project = await this.prismaService.project
-      .create({
-        data: {
-          ...createProjectDto,
-          slug: slugify(createProjectDto.name, {
-            remove: /[^a-z0-9 ]/i,
-            lower: true,
-          }),
-          billing: {
-            create: {
-              type: BillingType.Free,
-            },
-          },
-          roles: {
-            create: {
-              userId,
-              role: RoleType.Owner,
-            },
+    return this.prismaService.project.create({
+      data: {
+        ...createProjectDto,
+        slug: slugify(createProjectDto.name, {
+          remove: /[^a-z0-9 ]/i,
+          lower: true,
+        }),
+        billing: {
+          create: {
+            type: BillingType.Free,
           },
         },
-        include: {
-          billing: true,
-          roles: true,
+        roles: {
+          create: {
+            userId,
+            role: RoleType.Owner,
+          },
         },
-      })
-      .catch(() => undefined);
-
-    if (!project) {
-      throw new ConflictException();
-    }
-
-    return project;
-  }
-
-  async findOne(id: number, userId: number): Promise<Project> {
-    const project = await this.prismaService.project.findUnique({
-      where: {
-        id,
       },
       include: {
         billing: true,
@@ -81,43 +54,9 @@ export class ProjectService {
         },
       },
     });
-
-    if (!project) {
-      throw new NotFoundException();
-    }
-
-    return project;
   }
 
-  async update(
-    id: number,
-    updateProjectDto: UpdateProjectDto,
-  ): Promise<Project> {
-    return this.prismaService.project.update({
-      where: {
-        id,
-      },
-      data: updateProjectDto,
-      include: {
-        billing: true,
-        roles: true,
-      },
-    });
-  }
-
-  async delete(id: number): Promise<Project> {
-    return this.prismaService.project.delete({
-      where: {
-        id,
-      },
-      include: {
-        billing: true,
-        roles: true,
-      },
-    });
-  }
-
-  async createToken(projectId: number, userId: number): Promise<Token> {
+  async createToken(userId: number, projectId: number): Promise<Token> {
     const roles = await this.prismaService.project
       .findUnique({
         where: {
@@ -137,43 +76,40 @@ export class ProjectService {
       throw new ForbiddenException();
     }
 
-    const token = plainToClass(
-      TokenPayload,
-      await this.prismaService.token.upsert({
-        where: {
-          projectId_userId: {
-            projectId,
-            userId,
-          },
-        },
-        create: {
+    const token = await this.prismaService.token.upsert({
+      where: {
+        projectId_userId: {
           projectId,
           userId,
         },
-        update: {},
-        select: {
-          project: {
-            select: {
-              id: true,
-              roles: {
-                where: {
-                  userId,
-                },
-                select: {
-                  role: true,
-                },
+      },
+      create: {
+        projectId,
+        userId,
+      },
+      update: {},
+      select: {
+        project: {
+          select: {
+            id: true,
+            roles: {
+              where: {
+                userId,
               },
-              billing: {
-                select: {
-                  id: true,
-                  type: true,
-                },
+              select: {
+                role: true,
+              },
+            },
+            billing: {
+              select: {
+                id: true,
+                type: true,
               },
             },
           },
         },
-      }),
-    );
+      },
+    });
 
     return {
       token: await this.jwtService.signAsync({
@@ -183,13 +119,66 @@ export class ProjectService {
     };
   }
 
-  async createInvite(
+  async findMe(userId: number, id: number): Promise<Project> {
+    return this.prismaService.project.findUniqueOrThrow({
+      where: {
+        id,
+      },
+      include: {
+        billing: true,
+        roles: {
+          where: {
+            userId,
+          },
+        },
+      },
+    });
+  }
+
+  async update(
+    userId: number,
+    id: number,
+    updateProjectDto: UpdateProjectDto,
+  ): Promise<Project> {
+    return this.prismaService.project.update({
+      where: {
+        id,
+      },
+      data: updateProjectDto,
+      include: {
+        billing: true,
+        roles: {
+          where: {
+            userId,
+          },
+        },
+      },
+    });
+  }
+
+  async remove(userId: number, id: number): Promise<Project> {
+    return this.prismaService.project.delete({
+      where: {
+        id,
+      },
+      include: {
+        billing: true,
+        roles: {
+          where: {
+            userId,
+          },
+        },
+      },
+    });
+  }
+
+  async inviteUser(
     projectId: number,
-    createInviteDto: CreateInviteDto,
+    inviteUserDto: InviteUserDto,
   ): Promise<void> {
     const user = await this.prismaService.user.findUnique({
       where: {
-        email: createInviteDto.email,
+        email: inviteUserDto.email,
       },
     });
 
@@ -207,13 +196,13 @@ export class ProjectService {
     await this.prismaService.invite.create({
       data: {
         projectId,
-        ...createInviteDto,
+        ...inviteUserDto,
       },
     });
 
     await this.mailerService.sendMail({
       subject: 'New invitation to the project',
-      to: createInviteDto.email,
+      to: inviteUserDto.email,
       template: 'invitation',
       context: {
         url: this.configService.get<string>('FRONTEND_URL'),
@@ -223,26 +212,22 @@ export class ProjectService {
 
   async findAllUsers(
     projectId: number,
-    ids?: number[],
+    findAllUsersForProject: FindAllUsersForProject,
   ): Promise<UserWithRole[]> {
-    try {
-      return await this.prismaService.user.findMany({
-        where: {
-          id: {
-            in: ids,
-          },
-          roles: {
-            some: {
-              projectId,
-            },
+    return this.prismaService.user.findMany({
+      where: {
+        id: {
+          in: findAllUsersForProject.ids,
+        },
+        roles: {
+          some: {
+            projectId,
           },
         },
-        include: {
-          roles: true,
-        },
-      });
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+      },
+      include: {
+        roles: true,
+      },
+    });
   }
 }
