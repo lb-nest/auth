@@ -8,6 +8,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma.service';
+import { AUTH_SERVICE } from './shared/constants/broker';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 
 async function bootstrap() {
@@ -28,7 +29,7 @@ async function bootstrap() {
       transport: Transport.RMQ,
       options: {
         urls: [configService.get<string>('BROKER_URL')],
-        queue: 'AUTH_SERVICE_QUEUE',
+        queue: `${AUTH_SERVICE}_QUEUE`,
       },
     },
     {
