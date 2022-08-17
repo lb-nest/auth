@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
+import { PrismaService } from './prisma.service';
 import { ProjectModule } from './project/project.module';
 import { UserModule } from './user/user.module';
 
@@ -46,6 +47,7 @@ import { UserModule } from './user/user.module';
     UserModule,
   ],
   providers: [
+    PrismaService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
