@@ -72,7 +72,7 @@ export class ProjectService {
         },
       });
 
-    if (roles.length === 0) {
+    if (!roles?.length) {
       throw new ForbiddenException();
     }
 
