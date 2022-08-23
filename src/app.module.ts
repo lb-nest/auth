@@ -27,7 +27,7 @@ import { UserModule } from './user/user.module';
         return {
           transport,
           defaults: {
-            from: `lb-nest <${decodeURIComponent(
+            from: `no-reply <${decodeURIComponent(
               new URL(transport).username,
             )}>`,
           },
