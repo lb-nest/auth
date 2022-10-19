@@ -48,20 +48,21 @@ export class UserService {
       ]);
     }
 
-    const url = this.configService.get<string>('FRONTEND_URL');
-    const code = await this.jwtService.signAsync({
-      id: user.id,
-    });
-
-    await this.mailerService.sendMail({
-      subject: 'Email confirmation',
-      to: user.email,
-      template: 'confirmation',
-      context: {
-        name: user.name,
-        url: url.concat(`/confirm?code=${code}`),
-      },
-    });
+    await Promise.allSettled([
+      this.mailerService.sendMail({
+        subject: 'Email confirmation',
+        to: user.email,
+        template: 'confirmation',
+        context: {
+          name: user.name,
+          url: `${this.configService.get<string>(
+            'FRONTEND_URL',
+          )}/confirm?code=${await this.jwtService.signAsync({
+            id: user.id,
+          })}`,
+        },
+      }),
+    ]);
 
     return user;
   }
