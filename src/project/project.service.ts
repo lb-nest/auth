@@ -102,7 +102,6 @@ export class ProjectService {
             },
             billing: {
               select: {
-                id: true,
                 type: true,
               },
             },

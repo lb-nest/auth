@@ -2,8 +2,6 @@ import Prisma from '@prisma/client';
 import { Exclude } from 'class-transformer';
 
 export class Billing implements Prisma.Billing {
-  id: number;
-
   @Exclude()
   projectId: number;
 
