@@ -7,7 +7,7 @@ import { TokenPayload } from './entities/token-payload.entity';
 import { Token } from './entities/token.entity';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

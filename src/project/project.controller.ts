@@ -18,7 +18,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 import { ProjectService } from './project.service';
 
-@Controller('projects')
+@Controller()
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 

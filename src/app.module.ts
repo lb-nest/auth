@@ -14,8 +14,8 @@ import { UserModule } from './user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        BROKER_URL: Joi.string().uri().required(),
         DATABASE_URL: Joi.string().uri().required(),
+        BROKER_URL: Joi.string().uri().required(),
         FRONTEND_URL: Joi.string().uri().required(),
         SECRET: Joi.string().required(),
         MAILER_TRANSPORT: Joi.string().required(),
