@@ -1,24 +1,24 @@
 import { Controller, UseGuards } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Auth } from './auth.decorator';
 import { AuthService } from './auth.service';
-import { SigninDto } from './dto/signin.dto';
-import { TokenPayload } from './entities/token-payload.entity';
+import { SignInDto } from './dto/sign-in.dto';
 import { Token } from './entities/token.entity';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { Auth } from './interfaces/auth.interface';
+import { JwtAuth } from './decorators/jwt-auth.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @MessagePattern('auth.signIn')
-  signIn(@Payload('payload') signinDto: SigninDto): Promise<Token> {
-    return this.authService.signIn(signinDto);
+  @MessagePattern('signIn')
+  signIn(@Payload() signInDto: SignInDto): Promise<Token> {
+    return this.authService.signIn(signInDto);
   }
 
-  @MessagePattern('auth.validateToken')
+  @MessagePattern('validateToken')
   @UseGuards(JwtAuthGuard)
-  validateToken(@Auth() auth: TokenPayload): TokenPayload {
+  validateToken(@JwtAuth() auth: Auth): Auth {
     return auth;
   }
 }

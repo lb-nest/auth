@@ -34,7 +34,7 @@ export class UserService {
 
     if (invites.length > 0) {
       await this.prismaService.$transaction([
-        this.prismaService.role.createMany({
+        this.prismaService.projectUser.createMany({
           data: invites.map(({ projectId }) => ({
             projectId,
             userId: user.id,
@@ -67,7 +67,13 @@ export class UserService {
     return user;
   }
 
-  async findOne(id: number): Promise<User> {
+  findAll(): Promise<User[]> {
+    return this.prismaService.user.findMany({
+      where: {},
+    });
+  }
+
+  findOne(id: number): Promise<User> {
     return this.prismaService.user.findUniqueOrThrow({
       where: {
         id,
@@ -75,10 +81,10 @@ export class UserService {
     });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(updateUserDto: UpdateUserDto): Promise<User> {
     return this.prismaService.user.update({
       where: {
-        id,
+        id: updateUserDto.id,
       },
       data: {
         ...updateUserDto,
@@ -89,7 +95,7 @@ export class UserService {
     });
   }
 
-  async remove(id: number): Promise<User> {
+  remove(id: number): Promise<User> {
     return this.prismaService.user.delete({
       where: {
         id,
@@ -97,25 +103,7 @@ export class UserService {
     });
   }
 
-  async findAllProjects(id: number): Promise<Project[]> {
-    return this.prismaService.project.findMany({
-      where: {
-        roles: {
-          some: {
-            user: {
-              id,
-            },
-          },
-        },
-      },
-      include: {
-        billing: true,
-        roles: true,
-      },
-    });
-  }
-
-  async confirmEmail(code: string): Promise<void> {
+  async confirm(code: string): Promise<boolean> {
     const user = await this.jwtService.verifyAsync(code);
     await this.prismaService.user.update({
       where: {
@@ -123,6 +111,27 @@ export class UserService {
       },
       data: {
         confirmed: true,
+      },
+    });
+
+    return true;
+  }
+
+  findAllProjects(id: number): Promise<Project[]> {
+    return this.prismaService.project.findMany({
+      where: {
+        users: {
+          some: {
+            userId: id,
+          },
+        },
+      },
+      include: {
+        users: {
+          where: {
+            userId: id,
+          },
+        },
       },
     });
   }

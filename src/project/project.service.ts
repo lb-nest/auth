@@ -1,15 +1,16 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { BillingType, RoleType } from '@prisma/client';
+import { AccessLevel } from '@prisma/client';
 import slugify from 'slugify';
 import { Token } from 'src/auth/entities/token.entity';
 import { PrismaService } from 'src/prisma.service';
-import { UserWithRole } from 'src/user/entities/user-with-role.entity';
+import { User } from 'src/user/entities/user.entity';
+import { CreateProjectTokenDto } from './dto/create-project-token.dto';
+import { CreateProjectUserDto } from './dto/create-project-user.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { FindAllUsersForProject } from './dto/find-all-users-for-project.dto';
-import { InviteUserDto } from './dto/invite-user.dto';
+import { FindAllProjectUsersDto } from './dto/find-all-project-users.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 
@@ -22,32 +23,23 @@ export class ProjectService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async create(
-    userId: number,
-    createProjectDto: CreateProjectDto,
-  ): Promise<Project> {
+  create(userId: number, createProjectDto: CreateProjectDto): Promise<Project> {
     return this.prismaService.project.create({
       data: {
         ...createProjectDto,
         slug: slugify(createProjectDto.name, {
-          remove: /[^a-z0-9 ]/i,
+          remove: /[^a-z0-9 ]/gim,
           lower: true,
         }),
-        billing: {
-          create: {
-            type: BillingType.Free,
-          },
-        },
-        roles: {
+        users: {
           create: {
             userId,
-            role: RoleType.Owner,
+            accessLevel: AccessLevel.Owner,
           },
         },
       },
       include: {
-        billing: true,
-        roles: {
+        users: {
           where: {
             userId,
           },
@@ -56,76 +48,36 @@ export class ProjectService {
     });
   }
 
-  async createToken(userId: number, projectId: number): Promise<Token> {
-    const roles = await this.prismaService.project
-      .findUnique({
-        where: {
-          id: projectId,
-        },
-      })
-      .roles({
-        where: {
-          userId,
-        },
-        include: {
-          project: true,
-        },
-      });
-
-    if (!roles?.length) {
-      throw new ForbiddenException();
-    }
-
-    const token = await this.prismaService.token.upsert({
-      where: {
-        projectId_userId: {
-          projectId,
-          userId,
-        },
-      },
-      create: {
-        projectId,
-        userId,
-      },
-      update: {},
-      select: {
-        project: {
-          select: {
-            id: true,
-            roles: {
-              where: {
-                userId,
-              },
-              select: {
-                role: true,
-              },
-            },
-            billing: {
-              select: {
-                type: true,
-              },
-            },
+  findAll(): Promise<Project[]> {
+    return this.prismaService.project.findMany({
+      where: {},
+      include: {
+        users: {
+          where: {
+            accessLevel: AccessLevel.Owner,
           },
         },
       },
     });
-
-    return {
-      token: await this.jwtService.signAsync({
-        id: userId,
-        project: token.project,
-      }),
-    };
   }
 
-  async findMe(userId: number, id: number): Promise<Project> {
-    return this.prismaService.project.findUniqueOrThrow({
+  findOne(
+    userId: number,
+    id: number,
+    accessLevel?: AccessLevel,
+  ): Promise<Project> {
+    return this.prismaService.project.findFirstOrThrow({
       where: {
         id,
+        users: {
+          some: {
+            userId,
+            accessLevel,
+          },
+        },
       },
       include: {
-        billing: true,
-        roles: {
+        users: {
           where: {
             userId,
           },
@@ -136,17 +88,17 @@ export class ProjectService {
 
   async update(
     userId: number,
-    id: number,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
+    await this.findOne(userId, updateProjectDto.id, AccessLevel.Owner);
+
     return this.prismaService.project.update({
       where: {
-        id,
+        id: updateProjectDto.id,
       },
       data: updateProjectDto,
       include: {
-        billing: true,
-        roles: {
+        users: {
           where: {
             userId,
           },
@@ -156,13 +108,14 @@ export class ProjectService {
   }
 
   async remove(userId: number, id: number): Promise<Project> {
+    await this.findOne(userId, id, AccessLevel.Owner);
+
     return this.prismaService.project.delete({
       where: {
         id,
       },
       include: {
-        billing: true,
-        roles: {
+        users: {
           where: {
             userId,
           },
@@ -171,61 +124,101 @@ export class ProjectService {
     });
   }
 
-  async inviteUser(
+  async createToken(
+    userId: number,
+    createProjectTokenDto: CreateProjectTokenDto,
+  ): Promise<Token> {
+    const token = await this.prismaService.token.upsert({
+      where: {
+        projectId_userId: {
+          userId,
+          projectId: createProjectTokenDto.id,
+        },
+      },
+      create: {
+        userId,
+        projectId: createProjectTokenDto.id,
+      },
+      update: {},
+      select: {
+        project: {
+          select: {
+            id: true,
+            users: {
+              where: {
+                userId,
+              },
+              select: {
+                accessLevel: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      token: await this.jwtService.signAsync({
+        id: userId,
+        project: {
+          id: token.project.id,
+        },
+      }),
+    };
+  }
+
+  async createUser(
     projectId: number,
-    inviteUserDto: InviteUserDto,
-  ): Promise<void> {
+    createProjectUserDto: CreateProjectUserDto,
+  ): Promise<boolean> {
     const user = await this.prismaService.user.findUnique({
       where: {
-        email: inviteUserDto.email,
+        email: createProjectUserDto.email,
       },
     });
 
     if (user) {
-      await this.prismaService.role.create({
+      await this.prismaService.projectUser.create({
         data: {
           projectId,
           userId: user.id,
         },
       });
-
-      return;
+    } else {
+      await this.prismaService.invite.create({
+        data: {
+          projectId,
+          ...createProjectUserDto,
+        },
+      });
     }
-
-    await this.prismaService.invite.create({
-      data: {
-        projectId,
-        ...inviteUserDto,
-      },
-    });
 
     await this.mailerService.sendMail({
       subject: 'New invitation to the project',
-      to: inviteUserDto.email,
+      to: createProjectUserDto.email,
       template: 'invitation',
       context: {
         url: this.configService.get<string>('FRONTEND_URL'),
       },
     });
+
+    return true;
   }
 
   async findAllUsers(
     projectId: number,
-    findAllUsersForProject: FindAllUsersForProject,
-  ): Promise<UserWithRole[]> {
+    findAllProjectUsersDto: FindAllProjectUsersDto,
+  ): Promise<User[]> {
     return this.prismaService.user.findMany({
       where: {
         id: {
-          in: findAllUsersForProject.ids,
+          in: findAllProjectUsersDto.ids,
         },
-        roles: {
+        projects: {
           some: {
             projectId,
           },
         },
-      },
-      include: {
-        roles: true,
       },
     });
   }

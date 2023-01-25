@@ -1,7 +1,6 @@
 import Prisma from '@prisma/client';
 import { Type } from 'class-transformer';
-import { Role } from 'src/user/entities/role.entity';
-import { Billing } from './billing.entity';
+import { ProjectUser } from 'src/project/entities/project-user.entity';
 
 export class Project implements Prisma.Project {
   id: number;
@@ -10,11 +9,8 @@ export class Project implements Prisma.Project {
 
   slug: string;
 
-  @Type(() => Billing)
-  billing: Billing;
-
-  @Type(() => Role)
-  roles: Role[];
+  @Type(() => ProjectUser)
+  users: ProjectUser[];
 
   createdAt: Date;
 

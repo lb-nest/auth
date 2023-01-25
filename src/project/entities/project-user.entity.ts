@@ -1,12 +1,12 @@
 import Prisma from '@prisma/client';
 import { Exclude } from 'class-transformer';
 
-export class Role implements Prisma.Role {
+export class ProjectUser implements Prisma.ProjectUser {
   @Exclude()
   userId: number;
 
   @Exclude()
   projectId: number;
 
-  role: Prisma.RoleType;
+  accessLevel: Prisma.AccessLevel;
 }

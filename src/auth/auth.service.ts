@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
 import { PrismaService } from 'src/prisma.service';
-import { SigninDto } from './dto/signin.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { Token } from './entities/token.entity';
 
 @Injectable()
@@ -12,10 +12,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signIn(signinDto: SigninDto): Promise<Token> {
+  async signIn(signInDto: SignInDto): Promise<Token> {
     const user = await this.prismaService.user.findUniqueOrThrow({
       where: {
-        email: signinDto.email,
+        email: signInDto.email,
       },
       select: {
         id: true,
@@ -23,7 +23,7 @@ export class AuthService {
       },
     });
 
-    const result = await compare(signinDto.password, user.password);
+    const result = await compare(signInDto.password, user.password);
     if (result) {
       delete user.password;
       return {

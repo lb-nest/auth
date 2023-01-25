@@ -3,6 +3,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
 import Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
 import { PrismaService } from './prisma.service';
@@ -42,6 +43,12 @@ import { UserModule } from './user/user.module';
       },
       inject: [ConfigService],
     }),
+    JwtModule.registerAsync({
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('SECRET'),
+      }),
+      inject: [ConfigService],
+    }),
     AuthModule,
     ProjectModule,
     UserModule,
@@ -53,5 +60,6 @@ import { UserModule } from './user/user.module';
       useClass: ClassSerializerInterceptor,
     },
   ],
+  exports: [JwtModule],
 })
 export class AppModule {}

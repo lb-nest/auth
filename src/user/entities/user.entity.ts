@@ -10,6 +10,8 @@ export class User implements Prisma.User {
 
   email: string;
 
+  phone: string | null;
+
   @Exclude()
   password: string;
 

@@ -1,8 +1,5 @@
-import { Controller, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, ParseIntPipe, UseInterceptors } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Auth } from 'src/auth/auth.decorator';
-import { TokenPayload } from 'src/auth/entities/token-payload.entity';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Project } from 'src/project/entities/project.entity';
 import { PlainToClassInterceptor } from 'src/shared/interceptors/plain-to-class.interceptor';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,45 +11,44 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @MessagePattern('users.create')
+  @MessagePattern('createUser')
   @UseInterceptors(new PlainToClassInterceptor(User))
-  create(@Payload('payload') createUserDto: CreateUserDto) {
+  create(@Payload() createUserDto: CreateUserDto): Promise<User> {
     return this.userService.create(createUserDto);
   }
 
-  @MessagePattern('users.@me')
-  @UseGuards(JwtAuthGuard)
+  @MessagePattern('findAllUsers')
   @UseInterceptors(new PlainToClassInterceptor(User))
-  findMe(@Auth() auth: Omit<TokenPayload, 'project'>) {
-    return this.userService.findOne(auth.id);
+  findAll(): Promise<User[]> {
+    return this.userService.findAll();
   }
 
-  @MessagePattern('users.@me.findAllProjects')
-  @UseGuards(JwtAuthGuard)
+  @MessagePattern('findOneUser')
+  @UseInterceptors(new PlainToClassInterceptor(User))
+  findOne(@Payload(ParseIntPipe) id: number): Promise<User> {
+    return this.userService.findOne(id);
+  }
+
+  @MessagePattern('updateUser')
+  @UseInterceptors(new PlainToClassInterceptor(User))
+  update(@Payload() updateUserDto: UpdateUserDto): Promise<User> {
+    return this.userService.update(updateUserDto);
+  }
+
+  @MessagePattern('removeUser')
+  @UseInterceptors(new PlainToClassInterceptor(User))
+  remove(@Payload(ParseIntPipe) id: number): Promise<User> {
+    return this.userService.remove(id);
+  }
+
+  @MessagePattern('confirmUser')
+  confirm(@Payload() code: string): Promise<boolean> {
+    return this.userService.confirm(code);
+  }
+
+  @MessagePattern('findAllUserProjects')
   @UseInterceptors(new PlainToClassInterceptor(Project))
-  findAllProjects(@Auth() auth: Omit<TokenPayload, 'project'>) {
-    return this.userService.findAllProjects(auth.id);
-  }
-
-  @MessagePattern('users.@me.update')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new PlainToClassInterceptor(User))
-  update(
-    @Auth() auth: Omit<TokenPayload, 'project'>,
-    @Payload('payload') updateUserDto: UpdateUserDto,
-  ) {
-    return this.userService.update(auth.id, updateUserDto);
-  }
-
-  @MessagePattern('users.@me.remove')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new PlainToClassInterceptor(User))
-  remove(@Auth() auth: Omit<TokenPayload, 'project'>) {
-    return this.userService.remove(auth.id);
-  }
-
-  @MessagePattern('users.@me.confirmEmail')
-  confirmEmail(@Payload('payload') code: string) {
-    return this.userService.confirmEmail(code);
+  findAllProjects(@Payload(ParseIntPipe) id: number): Promise<Project[]> {
+    return this.userService.findAllProjects(id);
   }
 }

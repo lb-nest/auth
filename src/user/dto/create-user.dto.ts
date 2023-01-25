@@ -3,7 +3,9 @@ import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
+  IsUrl,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -18,8 +20,13 @@ export class CreateUserDto implements Prisma.UserCreateInput {
   @MaxLength(64)
   password: string;
 
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) => value?.trim())
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  avatarUrl?: string;
 }

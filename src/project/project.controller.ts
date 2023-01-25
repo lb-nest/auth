@@ -1,19 +1,12 @@
-import {
-  Controller,
-  ParseIntPipe,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, ParseIntPipe, UseInterceptors } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Auth } from 'src/auth/auth.decorator';
-import { TokenPayload } from 'src/auth/entities/token-payload.entity';
 import { Token } from 'src/auth/entities/token.entity';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PlainToClassInterceptor } from 'src/shared/interceptors/plain-to-class.interceptor';
-import { UserWithRole } from 'src/user/entities/user-with-role.entity';
+import { User } from 'src/user/entities/user.entity';
+import { CreateProjectTokenDto } from './dto/create-project-token.dto';
+import { CreateProjectUserDto } from './dto/create-project-user.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { FindAllUsersForProject } from './dto/find-all-users-for-project.dto';
-import { InviteUserDto } from './dto/invite-user.dto';
+import { FindAllProjectUsersDto } from './dto/find-all-project-users.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 import { ProjectService } from './project.service';
@@ -22,72 +15,71 @@ import { ProjectService } from './project.service';
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @MessagePattern('projects.create')
-  @UseGuards(JwtAuthGuard)
+  @MessagePattern('createProject')
   @UseInterceptors(new PlainToClassInterceptor(Project))
   create(
-    @Auth() auth: Omit<TokenPayload, 'project'>,
-    @Payload('payload') createProjectDto: CreateProjectDto,
+    @Payload('userId', ParseIntPipe) userId: number,
+    @Payload() createProjectDto: CreateProjectDto,
   ): Promise<Project> {
-    return this.projectService.create(auth.id, createProjectDto);
+    return this.projectService.create(userId, createProjectDto);
   }
 
-  @MessagePattern('projects.createToken')
-  @UseGuards(JwtAuthGuard)
-  createToken(
-    @Auth() auth: Omit<TokenPayload, 'project'>,
-    @Payload('payload', ParseIntPipe) id: number,
-  ): Promise<Token> {
-    return this.projectService.createToken(auth.id, id);
-  }
-
-  @MessagePattern('projects.@me')
-  @UseGuards(JwtAuthGuard)
+  @MessagePattern('findAllProjects')
   @UseInterceptors(new PlainToClassInterceptor(Project))
-  findMe(@Auth() auth: Required<TokenPayload>): Promise<Project> {
-    return this.projectService.findMe(auth.id, auth.project.id);
+  findAll(): Promise<Project[]> {
+    return this.projectService.findAll();
   }
 
-  @MessagePattern('projects.@me.update')
-  @UseGuards(JwtAuthGuard)
+  @MessagePattern('findOneProject')
+  @UseInterceptors(new PlainToClassInterceptor(Project))
+  findOne(
+    @Payload('userId', ParseIntPipe) userId: number,
+    @Payload('id', ParseIntPipe) id: number,
+  ): Promise<Project> {
+    return this.projectService.findOne(userId, id);
+  }
+
+  @MessagePattern('updateProject')
   @UseInterceptors(new PlainToClassInterceptor(Project))
   update(
-    @Auth() auth: Required<TokenPayload>,
-    @Payload('payload') updateProjectDto: UpdateProjectDto,
+    @Payload('userId', ParseIntPipe) userId: number,
+    @Payload() updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
-    return this.projectService.update(
-      auth.id,
-      auth.project.id,
-      updateProjectDto,
-    );
+    return this.projectService.update(userId, updateProjectDto);
   }
 
-  @MessagePattern('projects.@me.remove')
-  @UseGuards(JwtAuthGuard)
+  @MessagePattern('removeProject')
   @UseInterceptors(new PlainToClassInterceptor(Project))
-  remove(@Auth() auth: Required<TokenPayload>): Promise<Project> {
-    return this.projectService.remove(auth.id, auth.project.id);
+  remove(
+    @Payload('userId', ParseIntPipe) userId: number,
+    @Payload('id', ParseIntPipe) id: number,
+  ): Promise<Project> {
+    return this.projectService.remove(userId, id);
   }
 
-  @MessagePattern('projects.@me.inviteUser')
-  @UseGuards(JwtAuthGuard)
-  inviteUser(
-    @Auth() auth: Required<TokenPayload>,
-    @Payload('payload') inviteUserDto: InviteUserDto,
-  ): Promise<void> {
-    return this.projectService.inviteUser(auth.project.id, inviteUserDto);
+  @MessagePattern('createProjectToken')
+  @UseInterceptors(new PlainToClassInterceptor(Token))
+  createToken(
+    @Payload('userId', ParseIntPipe) userId: number,
+    @Payload() createProjectTokenDto: CreateProjectTokenDto,
+  ): Promise<Token> {
+    return this.projectService.createToken(userId, createProjectTokenDto);
   }
 
-  @MessagePattern('projects.@me.findAllUsers')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(new PlainToClassInterceptor(UserWithRole))
+  @MessagePattern('createProjectUser')
+  createProjectUser(
+    @Payload('projectId', ParseIntPipe) projectId: number,
+    @Payload() createProjectUserDto: CreateProjectUserDto,
+  ): Promise<boolean> {
+    return this.projectService.createUser(projectId, createProjectUserDto);
+  }
+
+  @MessagePattern('findAllProjectUsers')
+  @UseInterceptors(new PlainToClassInterceptor(User))
   findAllUsers(
-    @Auth() auth: Required<TokenPayload>,
-    @Payload('payload') findAllUsersForProject: FindAllUsersForProject,
-  ): Promise<UserWithRole[]> {
-    return this.projectService.findAllUsers(
-      auth.project.id,
-      findAllUsersForProject,
-    );
+    @Payload('projectId', ParseIntPipe) projectId: number,
+    @Payload() findAllProjectUsersDto: FindAllProjectUsersDto,
+  ): Promise<User[]> {
+    return this.projectService.findAllUsers(projectId, findAllProjectUsersDto);
   }
 }
