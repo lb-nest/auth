@@ -1,7 +1,6 @@
-import { Controller, ParseIntPipe, UseInterceptors } from '@nestjs/common';
+import { Controller, ParseIntPipe, SerializeOptions } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { Token } from 'src/auth/entities/token.entity';
-import { PlainToClassInterceptor } from 'src/shared/interceptors/plain-to-class.interceptor';
 import { User } from 'src/user/entities/user.entity';
 import { CreateProjectTokenDto } from './dto/create-project-token.dto';
 import { CreateProjectUserDto } from './dto/create-project-user.dto';
@@ -15,8 +14,10 @@ import { ProjectService } from './project.service';
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
+  @SerializeOptions({
+    type: Project,
+  })
   @MessagePattern('createProject')
-  @UseInterceptors(new PlainToClassInterceptor(Project))
   create(
     @Payload('userId', ParseIntPipe) userId: number,
     @Payload() createProjectDto: CreateProjectDto,
@@ -24,14 +25,18 @@ export class ProjectController {
     return this.projectService.create(userId, createProjectDto);
   }
 
+  @SerializeOptions({
+    type: Project,
+  })
   @MessagePattern('findAllProjects')
-  @UseInterceptors(new PlainToClassInterceptor(Project))
   findAll(): Promise<Project[]> {
     return this.projectService.findAll();
   }
 
+  @SerializeOptions({
+    type: Project,
+  })
   @MessagePattern('findOneProject')
-  @UseInterceptors(new PlainToClassInterceptor(Project))
   findOne(
     @Payload('userId', ParseIntPipe) userId: number,
     @Payload('id', ParseIntPipe) id: number,
@@ -39,8 +44,10 @@ export class ProjectController {
     return this.projectService.findOne(userId, id);
   }
 
+  @SerializeOptions({
+    type: Project,
+  })
   @MessagePattern('updateProject')
-  @UseInterceptors(new PlainToClassInterceptor(Project))
   update(
     @Payload('userId', ParseIntPipe) userId: number,
     @Payload() updateProjectDto: UpdateProjectDto,
@@ -48,8 +55,10 @@ export class ProjectController {
     return this.projectService.update(userId, updateProjectDto);
   }
 
+  @SerializeOptions({
+    type: Project,
+  })
   @MessagePattern('removeProject')
-  @UseInterceptors(new PlainToClassInterceptor(Project))
   remove(
     @Payload('userId', ParseIntPipe) userId: number,
     @Payload('id', ParseIntPipe) id: number,
@@ -57,8 +66,10 @@ export class ProjectController {
     return this.projectService.remove(userId, id);
   }
 
+  @SerializeOptions({
+    type: Token,
+  })
   @MessagePattern('createProjectToken')
-  @UseInterceptors(new PlainToClassInterceptor(Token))
   createToken(
     @Payload('userId', ParseIntPipe) userId: number,
     @Payload() createProjectTokenDto: CreateProjectTokenDto,
@@ -74,8 +85,10 @@ export class ProjectController {
     return this.projectService.createUser(projectId, createProjectUserDto);
   }
 
+  @SerializeOptions({
+    type: User,
+  })
   @MessagePattern('findAllProjectUsers')
-  @UseInterceptors(new PlainToClassInterceptor(User))
   findAllUsers(
     @Payload('projectId', ParseIntPipe) projectId: number,
     @Payload() findAllProjectUsersDto: FindAllProjectUsersDto,

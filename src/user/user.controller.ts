@@ -1,7 +1,6 @@
-import { Controller, ParseIntPipe, UseInterceptors } from '@nestjs/common';
+import { Controller, ParseIntPipe, SerializeOptions } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { Project } from 'src/project/entities/project.entity';
-import { PlainToClassInterceptor } from 'src/shared/interceptors/plain-to-class.interceptor';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -11,32 +10,42 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @SerializeOptions({
+    type: User,
+  })
   @MessagePattern('createUser')
-  @UseInterceptors(new PlainToClassInterceptor(User))
   create(@Payload() createUserDto: CreateUserDto): Promise<User> {
     return this.userService.create(createUserDto);
   }
 
+  @SerializeOptions({
+    type: User,
+  })
   @MessagePattern('findAllUsers')
-  @UseInterceptors(new PlainToClassInterceptor(User))
   findAll(): Promise<User[]> {
     return this.userService.findAll();
   }
 
+  @SerializeOptions({
+    type: User,
+  })
   @MessagePattern('findOneUser')
-  @UseInterceptors(new PlainToClassInterceptor(User))
   findOne(@Payload(ParseIntPipe) id: number): Promise<User> {
     return this.userService.findOne(id);
   }
 
+  @SerializeOptions({
+    type: User,
+  })
   @MessagePattern('updateUser')
-  @UseInterceptors(new PlainToClassInterceptor(User))
   update(@Payload() updateUserDto: UpdateUserDto): Promise<User> {
     return this.userService.update(updateUserDto);
   }
 
+  @SerializeOptions({
+    type: User,
+  })
   @MessagePattern('removeUser')
-  @UseInterceptors(new PlainToClassInterceptor(User))
   remove(@Payload(ParseIntPipe) id: number): Promise<User> {
     return this.userService.remove(id);
   }
@@ -46,8 +55,10 @@ export class UserController {
     return this.userService.confirm(code);
   }
 
+  @SerializeOptions({
+    type: Project,
+  })
   @MessagePattern('findAllUserProjects')
-  @UseInterceptors(new PlainToClassInterceptor(Project))
   findAllProjects(@Payload(ParseIntPipe) id: number): Promise<Project[]> {
     return this.userService.findAllProjects(id);
   }
